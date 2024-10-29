@@ -44,7 +44,6 @@ dependencies {
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
