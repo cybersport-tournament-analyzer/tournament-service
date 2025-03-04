@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament, UUID> {
     Optional<Tournament> findByTournamentName(String tournamentName);
+
 }

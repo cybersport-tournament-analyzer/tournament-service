@@ -28,7 +28,7 @@ public class TournamentController {
     @GetMapping("/{tournamentName}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Get tournament by name")
-    public TournamentDto getTournamentByName(String tournamentName) {
+    public TournamentDto getTournamentByName(@PathVariable String tournamentName) {
         return tournamentService.getTournamentByName(tournamentName);
     }
 
@@ -36,7 +36,7 @@ public class TournamentController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create tournament")
     public TournamentDto createTournament(@RequestBody TournamentCreateDto tournamentCreateDto) {
-        return tournamentService.createTournament(tournamentCreateDto);
+        return tournamentService.createBaseTournament(tournamentCreateDto);
     }
 
     @PatchMapping("/{tournamentName}")

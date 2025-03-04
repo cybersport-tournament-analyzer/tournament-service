@@ -1,15 +1,18 @@
 package com.vkr.tournament_service.entity.tournament;
 
 
+import com.vkr.tournament_service.entity.match.TournamentMatch;
+import com.vkr.tournament_service.entity.player.Player;
+import com.vkr.tournament_service.entity.team.TournamentTeam;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Builder
 @Getter
@@ -34,7 +37,10 @@ public class Tournament {
     @Column(name = "teams_count", nullable = false)
     private Long teamsCount;
 
-    @Column(name = "winner_team_name", length = 255)
+    @Column(name = "tournament_format", nullable = false)
+    private String tournamentFormat;
+
+    @Column(name = "winner_team_name")
     private String winnerTeamName;
 
     @Column(name = "created_at", nullable = false)
@@ -44,6 +50,31 @@ public class Tournament {
     @Column(name = "tournament_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private TournamentStatus tournamentStatus;
+
+    @ElementCollection
+    @CollectionTable(name = "tournament_stages", joinColumns = @JoinColumn(name = "tournament_id"))
+    @Column(name = "stage_name")
+    @Enumerated(EnumType.STRING)
+    private List<Stage> stages = new ArrayList<>();
+
+    @Column(name = "current_stage_name", nullable = false)
+    private String currentStageName;
+
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL)
+    private List<TournamentMatch> matches = new ArrayList<>();
+
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL)
+    private List<TournamentTeam> teams = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "tournament_players",
+            joinColumns = @JoinColumn(name = "tournament_id"),
+            inverseJoinColumns = @JoinColumn(name = "player_id")
+    )
+    @MapKeyColumn(name = "team_name")
+    private Map<String, Player> players;
+
 
     @Override
     public final boolean equals(Object o) {
@@ -61,6 +92,5 @@ public class Tournament {
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
-
 
 }
