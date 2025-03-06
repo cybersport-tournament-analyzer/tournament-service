@@ -4,6 +4,7 @@ import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
+import com.vkr.tournament_service.entity.tournament.Tournament;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -21,4 +22,6 @@ public interface TournamentService {
     TournamentDto updateTournament(TournamentUpdateDto tournamentUpdateDto, String tournamentName);
 
     void deleteTournament(String tournamentName);
+
+    Tournament getTournamentById(UUID tournamentId);
 }

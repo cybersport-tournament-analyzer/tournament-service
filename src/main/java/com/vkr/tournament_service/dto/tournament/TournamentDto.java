@@ -28,7 +28,7 @@ public class TournamentDto {
     private UUID id;
     private String tournamentName;
     private String creatorUsername;
-    private String tournamentFormat;
+    private String tournamentMode;
     private Long teamsCount;
     private String winnerTeamName;
     private LocalDateTime createdAt;

@@ -2,11 +2,6 @@ package com.vkr.tournament_service.dto.match;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.vkr.tournament_service.entity.match.Match;
-import com.vkr.tournament_service.entity.tournament.Tournament;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

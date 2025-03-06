@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -83,6 +84,13 @@ public class TournamentServiceImpl implements TournamentService {
         tournamentRepository.delete(tournament);
 
         log.info("Tournament deleted: {}", tournament);
+    }
+
+    @Override
+    public Tournament getTournamentById(UUID tournamentId) {
+        return tournamentRepository.findById(tournamentId).orElseThrow(
+                () -> new EntityNotFoundException("Tournament with id=" + tournamentId + " not found")
+        );
     }
 
 

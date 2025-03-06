@@ -6,7 +6,6 @@ import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
@@ -37,8 +36,8 @@ public class Tournament {
     @Column(name = "teams_count", nullable = false)
     private Long teamsCount;
 
-    @Column(name = "tournament_format", nullable = false)
-    private String tournamentFormat;
+    @Column(name = "tournament_mode", nullable = false)
+    private String tournamentMode;
 
     @Column(name = "winner_team_name")
     private String winnerTeamName;

@@ -5,9 +5,12 @@ import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +28,7 @@ public class TournamentMatch {
     private UUID id;
 
     @Column(name = "start_time", nullable = false)
+    @CreationTimestamp
     private LocalDateTime startTime;
 
     @ManyToOne
@@ -40,6 +44,9 @@ public class TournamentMatch {
     @Column(name = "team2_score", nullable = false)
     private int team2Score;
 
+    @Column(name = "winner_team_name")
+    private String winnerTeamName;
+
     @Column(name = "match_status", nullable = false)
     private String matchStatus;
 
@@ -52,6 +59,6 @@ public class TournamentMatch {
     private TournamentTeam team2;
 
     @Transient
-    private List<Match> matches;
+    private List<Match> matches = new ArrayList<>();
 
 }

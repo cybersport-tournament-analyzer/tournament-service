@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changeset/V001_tournament-service_initial.sql
+  - include:
+      file: db/changelog/changeset/V002_tournament_service_add_winner.sql

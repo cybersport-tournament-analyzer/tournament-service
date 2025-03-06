@@ -4,11 +4,9 @@ import com.vkr.tournament_service.dto.team.TeamCreateDto;
 import com.vkr.tournament_service.dto.team.TeamDto;
 import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
-import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.player.PlayerRepository;
 import com.vkr.tournament_service.repository.team.TeamRepository;
-import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -57,5 +55,10 @@ public class TeamServiceImpl implements TeamService {
     @Override
     public Page<TeamDto> getAllTournamentTeams(UUID tournamentId, Pageable pageable) {
         return teamRepository.findAllByTournamentId(tournamentId, pageable).map(teamMapper::toDto);
+    }
+
+    @Override
+    public TournamentTeam getTeamByName(String teamName, UUID tournamentId) {
+        return teamRepository.findByTeamNameAndTournamentId(teamName, tournamentId);
     }
 }

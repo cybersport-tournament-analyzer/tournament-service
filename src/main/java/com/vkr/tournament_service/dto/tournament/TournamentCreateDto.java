@@ -20,7 +20,7 @@ public class TournamentCreateDto {
 
     private String tournamentName;
     private String creatorUsername;
-    private String tournamentFormat;
+    private String tournamentMode;
     private Long teamsCount;
     private List<String> stages;
 }
