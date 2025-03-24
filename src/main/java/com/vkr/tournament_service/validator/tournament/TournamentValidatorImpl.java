@@ -15,10 +15,10 @@ public class TournamentValidatorImpl implements TournamentValidator {
     private final TournamentRepository tournamentRepository;
 
     @Override
-    public void validateAccess(UUID tournamentId, String username) {
+    public void validateAccess(UUID tournamentId, String userId) {
         Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow();
-        if (!username.equals(tournament.getCreatorUsername())){
-            throw new ValidationException("User with username=" + username + " has no access to tournament with name=" + tournament.getTournamentName());
+        if (!userId.equals(String.valueOf(tournament.getCreatedAt()))){
+            throw new ValidationException("User with id=" + userId + " has no access to tournament with name=" + tournament.getTournamentName());
         }
     }
 }

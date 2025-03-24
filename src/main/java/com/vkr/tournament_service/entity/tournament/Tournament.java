@@ -11,6 +11,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Builder
@@ -30,8 +31,8 @@ public class Tournament {
     @Column(name = "tournament_name", length = 255, nullable = false)
     private String tournamentName;
 
-    @JoinColumn(name = "creator_username", nullable = false)
-    private String creatorUsername;
+    @Column(name = "creator_id", length = 255, nullable = false)
+    private String creatorId;
 
     @Column(name = "teams_count", nullable = false)
     private Long teamsCount;
@@ -45,6 +46,12 @@ public class Tournament {
     @Column(name = "created_at", nullable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @Column(name = "registration_start_time", nullable = false)
+    private OffsetDateTime registrationStartTime;
+
+    @Column(name = "registration_end_time", nullable = false)
+    private OffsetDateTime registrationEndTime;
 
     @Column(name = "tournament_status", nullable = false)
     @Enumerated(EnumType.STRING)

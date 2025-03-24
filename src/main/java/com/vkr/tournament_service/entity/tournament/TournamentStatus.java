@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum TournamentStatus {
+    NOT_STARTED("NOT_STARTED"),
+    REGISTRATION("REGISTRATION"),
     ACTIVE("ACTIVE"),
     COMPLETED("COMPLETED");
 

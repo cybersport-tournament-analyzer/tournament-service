@@ -44,12 +44,12 @@ public class TournamentServiceImpl implements TournamentService {
     public TournamentDto createBaseTournament(TournamentCreateDto tournamentCreateDto) {
         Tournament tournament = tournamentMapper.toEntity(tournamentCreateDto);
 
-        tournament.setTournamentStatus(TournamentStatus.ACTIVE);
+        tournament.setTournamentStatus(TournamentStatus.NOT_STARTED);
         tournament.setCurrentStageName("not started");
 
         List<String> stageNames = tournamentCreateDto.getStages();
         List<Stage> stages = stageNames.stream()
-                .map(stage -> Stage.fromName(stage))
+                .map(Stage::fromName)
                 .collect(Collectors.toList());
         tournament.setStages(stages);
 
@@ -64,7 +64,7 @@ public class TournamentServiceImpl implements TournamentService {
     public TournamentDto updateTournament(TournamentUpdateDto tournamentUpdateDto, String tournamentName) {
         Tournament tournament = getTournament(tournamentName);
 
-        tournamentValidator.validateAccess(tournament.getId(), tournament.getCreatorUsername());
+        tournamentValidator.validateAccess(tournament.getId(), String.valueOf(tournament.getCreatorId()));
 
         tournament = tournamentMapper.updateEntity(tournamentUpdateDto, tournament);
 
@@ -79,7 +79,7 @@ public class TournamentServiceImpl implements TournamentService {
     public void deleteTournament(String tournamentName) {
         Tournament tournament = getTournament(tournamentName);
 
-        tournamentValidator.validateAccess(tournament.getId(), tournament.getCreatorUsername());
+        tournamentValidator.validateAccess(tournament.getId(), String.valueOf(tournament.getCreatorId()));
 
         tournamentRepository.delete(tournament);
 
