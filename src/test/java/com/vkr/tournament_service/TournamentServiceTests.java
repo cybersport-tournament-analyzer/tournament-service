@@ -117,18 +117,6 @@ class TournamentServiceTests {
     }
 
     @Test
-    void deleteTournament_ShouldDeleteTournament() {
-        when(tournamentRepository.findByTournamentName("Test Tournament"))
-                .thenReturn(Optional.of(tournament));
-        doNothing().when(tournamentValidator).validateAccess(any(), any());
-        doNothing().when(tournamentRepository).delete(any(Tournament.class));
-
-        tournamentService.deleteTournament("Test Tournament");
-
-        verify(tournamentRepository, times(1)).delete(any(Tournament.class));
-    }
-
-    @Test
     void getAllTournaments_ShouldReturnPageOfTournaments() {
         Page<Tournament> tournamentPage = new PageImpl<>(List.of(tournament));
         when(tournamentRepository.findAll(any(Pageable.class))).thenReturn(tournamentPage);

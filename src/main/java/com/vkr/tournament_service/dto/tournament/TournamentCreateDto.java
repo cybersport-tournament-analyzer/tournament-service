@@ -1,13 +1,11 @@
 package com.vkr.tournament_service.dto.tournament;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -24,5 +22,6 @@ public class TournamentCreateDto {
     private Long teamsCount;
     private OffsetDateTime registrationStartTime;
     private OffsetDateTime registrationEndTime;
+    private OffsetDateTime tournamentStartTime;
     private List<String> stages;
 }

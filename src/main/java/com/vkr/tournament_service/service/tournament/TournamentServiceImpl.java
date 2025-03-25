@@ -42,6 +42,8 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public TournamentDto createBaseTournament(TournamentCreateDto tournamentCreateDto) {
+        tournamentValidator.validateTimes(tournamentCreateDto);
+
         Tournament tournament = tournamentMapper.toEntity(tournamentCreateDto);
 
         tournament.setTournamentStatus(TournamentStatus.NOT_STARTED);
@@ -61,10 +63,16 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
-    public TournamentDto updateTournament(TournamentUpdateDto tournamentUpdateDto, String tournamentName) {
-        Tournament tournament = getTournament(tournamentName);
+    public TournamentDto updateTournament(TournamentUpdateDto tournamentUpdateDto, String tournamentId) {
+        if (tournamentUpdateDto.getRegistrationEndTime() != null || tournamentUpdateDto.getRegistrationStartTime() != null
+                || tournamentUpdateDto.getTournamentStartTime() != null) {
+            tournamentValidator.validateTimes(tournamentUpdateDto);
+        }
 
-        tournamentValidator.validateAccess(tournament.getId(), String.valueOf(tournament.getCreatorId()));
+
+        Tournament tournament = getTournamentById(UUID.fromString(tournamentId));
+
+        tournamentValidator.validateAccess(tournament.getId(), tournamentUpdateDto.getUserId());
 
         tournament = tournamentMapper.updateEntity(tournamentUpdateDto, tournament);
 
@@ -76,10 +84,10 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
-    public void deleteTournament(String tournamentName) {
-        Tournament tournament = getTournament(tournamentName);
+    public void deleteTournament(String tournamentId, String userId) {
+        Tournament tournament = getTournamentById(UUID.fromString(tournamentId));
 
-        tournamentValidator.validateAccess(tournament.getId(), String.valueOf(tournament.getCreatorId()));
+        tournamentValidator.validateAccess(tournament.getId(), userId);
 
         tournamentRepository.delete(tournament);
 

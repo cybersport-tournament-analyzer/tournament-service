@@ -34,8 +34,8 @@ public class TournamentTeam {
     @Column(name = "flag")
     private String flag;
 
-    @Column(name = "creator_username", nullable = false)
-    private String creatorUsername;
+    @Column(name = "creator_steam_id", nullable = false)
+    private String creatorSteamId;
 
     @Column(name = "place")
     private String place;

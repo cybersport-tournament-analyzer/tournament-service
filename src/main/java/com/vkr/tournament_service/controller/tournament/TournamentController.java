@@ -39,17 +39,17 @@ public class TournamentController {
         return tournamentService.createBaseTournament(tournamentCreateDto);
     }
 
-    @PatchMapping("/{tournamentName}")
+    @PatchMapping("/{tournamentId}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Update tournament")
-    public TournamentDto updateTournament(@PathVariable String tournamentName, @RequestBody TournamentUpdateDto tournamentUpdateDto) {
-        return tournamentService.updateTournament(tournamentUpdateDto, tournamentName);
+    public TournamentDto updateTournament(@PathVariable String tournamentId, @RequestBody TournamentUpdateDto tournamentUpdateDto) {
+        return tournamentService.updateTournament(tournamentUpdateDto, tournamentId);
     }
 
-    @DeleteMapping("/{tournamentName}")
+    @DeleteMapping("/{tournamentId}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Delete tournament")
-    public void deleteTournament(@PathVariable String tournamentName) {
-        tournamentService.deleteTournament(tournamentName);
+    public void deleteTournament(@PathVariable String tournamentId, @RequestParam String userId) {
+        tournamentService.deleteTournament(tournamentId, userId);
     }
 }

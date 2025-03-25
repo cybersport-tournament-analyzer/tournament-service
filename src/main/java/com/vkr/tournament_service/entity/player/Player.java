@@ -21,20 +21,11 @@ public class Player {
     @UuidGenerator
     private UUID id;
 
-    @Column(name = "player_username", nullable = false)
-    private String playerUsername;
-
     @Column(name = "player_steam_id", nullable = false)
     private String playerSteamId;
 
-    @Column(name = "rating")
-    private int rating;
-
     @Transient
     private List<InGameRole> inGameRoles;
-
-    @Transient
-    private PlayerStats playerStats;
 
     @ManyToMany(mappedBy = "players")
     private List<TournamentTeam> teams;

@@ -14,5 +14,5 @@ import lombok.extern.jackson.Jacksonized;
 public class TeamCreateDto {
     private String teamName;
     private String flag;
-    private String creatorUsername;
+    private String creatorSteamId;
 }

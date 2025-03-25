@@ -1,6 +1,7 @@
 package com.vkr.tournament_service.handler;
 
 import com.vkr.tournament_service.exception.EntityNotFoundException;
+import com.vkr.tournament_service.exception.InvalidTournamentTimeException;
 import com.vkr.tournament_service.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleDataValidationException(ValidationException e, HttpServletRequest request) {
         log.error("Data validation error: {}", e.getMessage());
+        return buildErrorResponse(e, request);
+    }
+
+    @ExceptionHandler(InvalidTournamentTimeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidTimesException(InvalidTournamentTimeException e, HttpServletRequest request) {
+        log.error("Invalid times error: {}", e.getMessage());
         return buildErrorResponse(e, request);
     }
 

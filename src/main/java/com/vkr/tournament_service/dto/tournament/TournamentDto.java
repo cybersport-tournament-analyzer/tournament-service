@@ -36,6 +36,7 @@ public class TournamentDto {
     private LocalDateTime createdAt;
     private OffsetDateTime registrationStartTime;
     private OffsetDateTime registrationEndTime;
+    private OffsetDateTime tournamentStartTime;
     private TournamentStatus tournamentStatus;
     private List<String> stages;
     private Integer currentStageNumber;

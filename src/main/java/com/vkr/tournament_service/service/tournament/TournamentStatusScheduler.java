@@ -34,6 +34,12 @@ public class TournamentStatusScheduler {
 
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION) {
                 if (now.isAfter(tournament.getRegistrationEndTime())) {
+                    tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
+                    log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
+                }
+            }
+            if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION_ENDED) {
+                if (now.isAfter(tournament.getTournamentStartTime())) {
                     tournament.setTournamentStatus(TournamentStatus.ACTIVE);
                     log.info("Tournament {} status updated to ACTIVE", tournament.getTournamentName());
                 }

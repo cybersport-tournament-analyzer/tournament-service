@@ -53,6 +53,9 @@ public class Tournament {
     @Column(name = "registration_end_time", nullable = false)
     private OffsetDateTime registrationEndTime;
 
+    @Column(name = "tournament_start_time", nullable = false)
+    private OffsetDateTime tournamentStartTime;
+
     @Column(name = "tournament_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private TournamentStatus tournamentStatus;

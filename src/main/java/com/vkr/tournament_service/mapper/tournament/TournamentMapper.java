@@ -11,7 +11,8 @@ import org.mapstruct.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TournamentMapper {
 
     @Mapping(source = "tournamentStatus", target = "tournamentStatus", qualifiedByName = "getTournamentStatus")
@@ -22,7 +23,7 @@ public interface TournamentMapper {
     Tournament toEntity(TournamentCreateDto tournamentCreateDto);
 
     @Mapping(source = "tournamentStatus", target = "tournamentStatus", qualifiedByName = "getTournamentStatus")
-    @Mapping(source = "stages", target = "stages", qualifiedByName = "mapStageNamesToStages")
+    @Mapping(source = "stages", target = "stages", qualifiedByName = "mapStageNamesToStages", conditionExpression = "java(tournamentUpdateDto.getStages() != null)")
     Tournament updateEntity(TournamentUpdateDto tournamentUpdateDto, @MappingTarget Tournament tournament);
 
     @Named("getTournamentStatus")

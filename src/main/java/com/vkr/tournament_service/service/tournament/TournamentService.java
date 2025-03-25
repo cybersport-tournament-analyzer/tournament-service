@@ -19,9 +19,9 @@ public interface TournamentService {
 
     TournamentDto createBaseTournament(TournamentCreateDto tournamentCreateDto);
 
-    TournamentDto updateTournament(TournamentUpdateDto tournamentUpdateDto, String tournamentName);
+    TournamentDto updateTournament(TournamentUpdateDto tournamentUpdateDto, String tournamentId);
 
-    void deleteTournament(String tournamentName);
+    void deleteTournament(String tournamentId, String userId);
 
     Tournament getTournamentById(UUID tournamentId);
 }

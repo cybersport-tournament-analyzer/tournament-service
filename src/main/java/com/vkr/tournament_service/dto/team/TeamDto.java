@@ -22,6 +22,6 @@ public class TeamDto {
     private UUID tournamentId;
     private String teamName;
     private String flag;
-    private String creatorUsername;
+    private String creatorSteamId;
     private List<PlayerDto> players = new ArrayList<>();
 }

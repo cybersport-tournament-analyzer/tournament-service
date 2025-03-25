@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 
@@ -16,9 +17,13 @@ import java.util.List;
 @NoArgsConstructor
 public class TournamentUpdateDto {
 
+    private String userId;
     private String tournamentName;
     private Long teamsCount;
     private String winnerTeamName;
+    private OffsetDateTime registrationStartTime;
+    private OffsetDateTime registrationEndTime;
+    private OffsetDateTime tournamentStartTime;
     private TournamentStatus tournamentStatus;
     private List<String> stages;
 }
