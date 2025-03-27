@@ -7,6 +7,7 @@ import com.vkr.tournament_service.entity.tournament.Stage;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
+import com.vkr.tournament_service.exception.WrongTournamentStatusException;
 import com.vkr.tournament_service.mapper.tournament.TournamentMapper;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.validator.tournament.TournamentValidator;
@@ -99,6 +100,32 @@ public class TournamentServiceImpl implements TournamentService {
         return tournamentRepository.findById(tournamentId).orElseThrow(
                 () -> new EntityNotFoundException("Tournament with id=" + tournamentId + " not found")
         );
+    }
+
+    @Override
+    public TournamentDto startTournamentRegistration(String tournamentId, String userId) {
+        tournamentValidator.validateAccess(UUID.fromString(tournamentId), userId);
+        Tournament currentTournament = getTournamentById(UUID.fromString(tournamentId));
+        if (!currentTournament.getTournamentStatus().equals(TournamentStatus.NOT_STARTED)) {
+            throw new WrongTournamentStatusException("Registration is underway or has already " +
+                    "been completed");
+        }
+        currentTournament.setTournamentStatus(TournamentStatus.REGISTRATION);
+        tournamentRepository.save(currentTournament);
+        return tournamentMapper.toDto(currentTournament);
+    }
+
+    @Override
+    public TournamentDto stopTournamentRegistration(String tournamentId, String userId) {
+        tournamentValidator.validateAccess(UUID.fromString(tournamentId), userId);
+        Tournament currentTournament = getTournamentById(UUID.fromString(tournamentId));
+        if (!currentTournament.getTournamentStatus().equals(TournamentStatus.REGISTRATION)) {
+            throw new WrongTournamentStatusException("Registration has not started " +
+                    "or has already passed");
+        }
+        currentTournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
+        tournamentRepository.save(currentTournament);
+        return tournamentMapper.toDto(currentTournament);
     }
 
 

@@ -24,4 +24,8 @@ public interface TournamentService {
     void deleteTournament(String tournamentId, String userId);
 
     Tournament getTournamentById(UUID tournamentId);
+
+    TournamentDto startTournamentRegistration(String tournamentId, String userId);
+
+    TournamentDto stopTournamentRegistration(String tournamentId, String userId);
 }

@@ -20,6 +20,7 @@ public class TournamentUpdateDto {
     private String userId;
     private String tournamentName;
     private Long teamsCount;
+    private int substitutionsNumber;
     private String winnerTeamName;
     private OffsetDateTime registrationStartTime;
     private OffsetDateTime registrationEndTime;

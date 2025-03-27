@@ -1,7 +1,7 @@
 package com.vkr.tournament_service.service.player;
 
 import com.vkr.tournament_service.dto.player.PlayerCreateDto;
-import com.vkr.tournament_service.dto.player.PlayerDto;
+import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.mapper.player.PlayerMapper;
 import com.vkr.tournament_service.repository.player.PlayerRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,13 +17,13 @@ public class PlayerServiceImpl implements PlayerService {
     private final PlayerMapper playerMapper;
 
     @Override
-    public PlayerDto createPlayer(PlayerCreateDto playerCreateDto) {
+    public Player createPlayer(PlayerCreateDto playerCreateDto) {
         log.info("Creating player: {}", playerCreateDto);
-        return playerMapper.toDto(playerRepository.save(playerMapper.toEntity(playerCreateDto)));
+        return playerRepository.save(playerMapper.toEntity(playerCreateDto));
     }
 
     @Override
-    public PlayerDto getPlayer(String playerUsername) {
-        return playerMapper.toDto(playerRepository.findByPlayerUsername(playerUsername));
+    public Player getPlayer(String playerSteamId) {
+        return playerRepository.findByPlayerSteamId(playerSteamId);
     }
 }

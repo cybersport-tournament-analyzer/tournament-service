@@ -2,10 +2,11 @@ package com.vkr.tournament_service.service.player;
 
 import com.vkr.tournament_service.dto.player.PlayerCreateDto;
 import com.vkr.tournament_service.dto.player.PlayerDto;
+import com.vkr.tournament_service.entity.player.Player;
 
 public interface PlayerService {
 
-    PlayerDto createPlayer(PlayerCreateDto playerCreateDto);
+    Player createPlayer(PlayerCreateDto playerCreateDto);
 
-    PlayerDto getPlayer(String playerUsername);
+    Player getPlayer(String playerSteamId);
 }

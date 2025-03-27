@@ -23,5 +23,6 @@ public class TeamDto {
     private String teamName;
     private String flag;
     private String creatorSteamId;
+    private int averageRating;
     private List<PlayerDto> players = new ArrayList<>();
 }

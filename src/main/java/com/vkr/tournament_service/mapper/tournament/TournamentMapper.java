@@ -6,17 +6,19 @@ import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
 import com.vkr.tournament_service.entity.tournament.Stage;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
+import com.vkr.tournament_service.mapper.team.TeamMapper;
 import org.mapstruct.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
+@Mapper(componentModel = "spring", uses = {TeamMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE,
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TournamentMapper {
 
     @Mapping(source = "tournamentStatus", target = "tournamentStatus", qualifiedByName = "getTournamentStatus")
     @Mapping(source = "stages", target = "stages", qualifiedByName = "mapStagesToStringList")
+    @Mapping(source = "teams", target = "teams")
     TournamentDto toDto(Tournament tournament);
 
     @Mapping(source = "stages", target = "stages", qualifiedByName = "mapStageNamesToStages")

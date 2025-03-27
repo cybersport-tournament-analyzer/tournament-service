@@ -37,6 +37,9 @@ public class Tournament {
     @Column(name = "teams_count", nullable = false)
     private Long teamsCount;
 
+    @Column(name = "substitutions_number", nullable = false)
+    private int substitutionsNumber;
+
     @Column(name = "tournament_mode", nullable = false)
     private String tournamentMode;
 
@@ -100,6 +103,15 @@ public class Tournament {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    public int getTeamPlayersNumber() {
+        return switch (tournamentMode) {
+            case "1vs1" -> 1 + substitutionsNumber;
+            case "2vs2" -> 2 + substitutionsNumber;
+            case "5vs5" -> 5 + substitutionsNumber;
+            default -> throw new IllegalArgumentException("Unknown tournament mode: " + tournamentMode);
+        };
     }
 
 }

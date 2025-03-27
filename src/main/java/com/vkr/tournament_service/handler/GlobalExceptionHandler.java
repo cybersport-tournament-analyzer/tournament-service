@@ -1,8 +1,6 @@
 package com.vkr.tournament_service.handler;
 
-import com.vkr.tournament_service.exception.EntityNotFoundException;
-import com.vkr.tournament_service.exception.InvalidTournamentTimeException;
-import com.vkr.tournament_service.exception.ValidationException;
+import com.vkr.tournament_service.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -57,6 +55,41 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidTimesException(InvalidTournamentTimeException e, HttpServletRequest request) {
         log.error("Invalid times error: {}", e.getMessage());
+        return buildErrorResponse(e, request);
+    }
+
+    @ExceptionHandler(WrongTournamentStatusException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleWrongTournamentStatusException(WrongTournamentStatusException e, HttpServletRequest request) {
+        log.error("Wrong tournament status error: {}", e.getMessage());
+        return buildErrorResponse(e, request);
+    }
+
+    @ExceptionHandler(TeamListIsFullException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTeamListIsFullException(TeamListIsFullException e, HttpServletRequest request) {
+        log.error("Tournament teams list error: {}", e.getMessage());
+        return buildErrorResponse(e, request);
+    }
+
+    @ExceptionHandler(AlreadyInOtherTeamException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleAlreadyInOtherTeamException(AlreadyInOtherTeamException e, HttpServletRequest request) {
+        log.error("Tournament team error: {}", e.getMessage());
+        return buildErrorResponse(e, request);
+    }
+
+    @ExceptionHandler(TeamNameAlreadyInUseException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTeamNameAlreadyInUseException(TeamNameAlreadyInUseException e, HttpServletRequest request) {
+        log.error("Team name error: {}", e.getMessage());
+        return buildErrorResponse(e, request);
+    }
+
+    @ExceptionHandler(TeamIsFullException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTeamIsFullException(TeamIsFullException e, HttpServletRequest request) {
+        log.error("Team size error: {}", e.getMessage());
         return buildErrorResponse(e, request);
     }
 

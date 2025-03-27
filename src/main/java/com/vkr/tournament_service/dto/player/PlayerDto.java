@@ -18,9 +18,6 @@ import java.util.UUID;
 @Jacksonized
 public class PlayerDto {
     private UUID id;
-    private String playerUsername;
     private String playerSteamId;
-    private int rating;
     private List<InGameRole> inGameRoles;
-    private PlayerStats playerStats;
 }

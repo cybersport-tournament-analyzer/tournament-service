@@ -15,8 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @Jacksonized
 public class PlayerCreateDto {
-    private String playerUsername;
     private String playerSteamId;
-    private int rating;
     private List<InGameRole> inGameRoles;
 }
