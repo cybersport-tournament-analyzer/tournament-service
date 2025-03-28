@@ -2,9 +2,7 @@ package com.vkr.tournament_service.service.team;
 
 import com.vkr.tournament_service.dto.team.TeamCreateDto;
 import com.vkr.tournament_service.dto.team.TeamDto;
-import com.vkr.tournament_service.entity.match.Match;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
-import com.vkr.tournament_service.entity.tournament.Tournament;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -21,4 +19,6 @@ public interface TeamService {
     Page<TeamDto> getAllTournamentTeams(UUID tournamentId, Pageable pageable);
 
     TournamentTeam getTeamByName(String teamName, UUID tournamentId);
+
+    void deleteTeam(UUID teamId, String userId);
 }

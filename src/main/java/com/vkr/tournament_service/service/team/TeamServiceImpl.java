@@ -1,8 +1,10 @@
 package com.vkr.tournament_service.service.team;
 
+import com.vkr.tournament_service.client.user.UserClient;
 import com.vkr.tournament_service.dto.player.PlayerCreateDto;
 import com.vkr.tournament_service.dto.team.TeamCreateDto;
 import com.vkr.tournament_service.dto.team.TeamDto;
+import com.vkr.tournament_service.dto.user.GetAverageRatingByIdsDto;
 import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
@@ -12,6 +14,7 @@ import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.team.TeamRepository;
 import com.vkr.tournament_service.service.player.PlayerService;
 import com.vkr.tournament_service.service.tournament.TournamentService;
+import com.vkr.tournament_service.validator.team.TeamValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +35,8 @@ public class TeamServiceImpl implements TeamService {
     private final TeamMapper teamMapper;
     private final PlayerService playerService;
     private final TournamentService tournamentService;
+    private final UserClient userClient;
+    private final TeamValidator teamValidator;
 
     @Override
     @Transactional
@@ -43,7 +48,7 @@ public class TeamServiceImpl implements TeamService {
         }
         if (currentTournament.getTeams().stream()
                 .map(TournamentTeam::getTeamName)
-                .anyMatch(name -> name.equals(teamCreateDto.getTeamName()))){
+                .anyMatch(name -> name.equals(teamCreateDto.getTeamName()))) {
             throw new TeamNameAlreadyInUseException("Yours team name is already in use.");
         }
         if (currentTournament.getTeams().size() == currentTournament.getTeamsCount()) {
@@ -71,14 +76,14 @@ public class TeamServiceImpl implements TeamService {
         }
 
         for (String id : teamCreateDto.getSteamIds()) {
-            if (players.size() == currentTournament.getTeamPlayersNumber()){
+            if (players.size() == currentTournament.getTeamPlayersNumber()) {
                 throw new TeamIsFullException("Maximum team size is: " +
                         currentTournament.getTeamPlayersNumber());
             }
             Player currentPlayer = playerService.getPlayer(id);
             if (currentPlayer != null) {
                 if (isAlreadyInAnotherTeam(currentTournament, creatorPlayer) || players.contains(currentPlayer)) {
-                    throw new AlreadyInOtherTeamException("Player with id " +  currentPlayer.getPlayerSteamId() +
+                    throw new AlreadyInOtherTeamException("Player with id " + currentPlayer.getPlayerSteamId() +
                             " is already in another team");
                 }
                 players.add(currentPlayer);
@@ -90,6 +95,8 @@ public class TeamServiceImpl implements TeamService {
         }
 
         team.setPlayers(players);
+        team.setAverageRating(getAverageEloRating(players,
+                currentTournament.getTeamPlayersNumber() - currentTournament.getSubstitutionsNumber()));
 
         return teamMapper.toDto(teamRepository.save(team));
     }
@@ -116,9 +123,27 @@ public class TeamServiceImpl implements TeamService {
         return teamRepository.findByTeamNameAndTournamentId(teamName, tournamentId);
     }
 
+    @Override
+    public void deleteTeam(UUID teamId, String userId) {
+        TournamentTeam team = teamRepository.findById(teamId).orElseThrow();
+        teamValidator.validateAccess(teamId, userId);
+        teamRepository.delete(team);
+    }
+
     private boolean isAlreadyInAnotherTeam(Tournament currentTournament, Player currentPlayer) {
         return currentTournament.getTeams().stream()
                 .flatMap(t -> t.getPlayers().stream())
                 .anyMatch(p -> p.getPlayerSteamId().equals(currentPlayer.getPlayerSteamId()));
+    }
+
+    private int getAverageEloRating(List<Player> players, int playersNumber) {
+        GetAverageRatingByIdsDto dto = new GetAverageRatingByIdsDto();
+        dto.setPlayersNumber(playersNumber);
+        List<String> steamIds = players.stream()
+                .map(Player::getPlayerSteamId)
+                .toList();
+        dto.setIds(steamIds);
+
+        return userClient.getAverageRatingByIds(dto);
     }
 }
