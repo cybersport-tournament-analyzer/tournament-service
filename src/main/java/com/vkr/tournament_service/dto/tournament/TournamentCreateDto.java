@@ -1,5 +1,7 @@
 package com.vkr.tournament_service.dto.tournament;
 
+import com.vkr.tournament_service.dto.tournamentStage.TournamentStageCreateDto;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,14 +17,30 @@ import java.util.List;
 @NoArgsConstructor
 @Jacksonized
 public class TournamentCreateDto {
-
+    @NotBlank
     private String tournamentName;
+
+    @NotBlank
     private String creatorId;
-    private String tournamentMode;
+
+    @Positive
     private Long teamsCount;
+
+    @PositiveOrZero
     private int substitutionsNumber;
+
+    @NotBlank
+    private String tournamentMode;
+
+    @Future
     private OffsetDateTime registrationStartTime;
+
+    @Future
     private OffsetDateTime registrationEndTime;
+
+    @Future
     private OffsetDateTime tournamentStartTime;
-    private List<String> stages;
+
+    @NotEmpty
+    private List<TournamentStageCreateDto> stages;
 }

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,8 +30,8 @@ public class TeamController {
     }
 
     @GetMapping("/tournament/{tournamentId}")
-    public Page<TeamDto> getAllTournamentTeams(@PathVariable String tournamentId, Pageable pageable) {
-        return teamService.getAllTournamentTeams(UUID.fromString(tournamentId), pageable);
+    public List<TeamDto> getAllTournamentTeams(@PathVariable String tournamentId) {
+        return teamService.getAllTournamentTeams(UUID.fromString(tournamentId));
     }
 
     @GetMapping("/{teamId}")

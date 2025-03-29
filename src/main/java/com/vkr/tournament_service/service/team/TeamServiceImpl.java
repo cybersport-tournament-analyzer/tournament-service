@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -114,8 +115,10 @@ public class TeamServiceImpl implements TeamService {
     }
 
     @Override
-    public Page<TeamDto> getAllTournamentTeams(UUID tournamentId, Pageable pageable) {
-        return teamRepository.findAllByTournamentId(tournamentId, pageable).map(teamMapper::toDto);
+    public List<TeamDto> getAllTournamentTeams(UUID tournamentId) {
+        return teamRepository.findAllByTournamentId(tournamentId).stream()
+                .map(teamMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override

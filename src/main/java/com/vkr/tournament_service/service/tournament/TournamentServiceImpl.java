@@ -3,12 +3,14 @@ package com.vkr.tournament_service.service.tournament;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
-import com.vkr.tournament_service.entity.tournament.Stage;
+import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
+import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.exception.WrongTournamentStatusException;
 import com.vkr.tournament_service.mapper.tournament.TournamentMapper;
+import com.vkr.tournament_service.mapper.tournamentStage.TournamentStageMapper;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.validator.tournament.TournamentValidator;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +19,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -48,12 +52,21 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament tournament = tournamentMapper.toEntity(tournamentCreateDto);
 
         tournament.setTournamentStatus(TournamentStatus.NOT_STARTED);
-        tournament.setCurrentStageName("not started");
+        tournament.setCurrentStageOrder(0);
 
-        List<String> stageNames = tournamentCreateDto.getStages();
-        List<Stage> stages = stageNames.stream()
-                .map(Stage::fromName)
+        List<TournamentStage> stages = IntStream.range(0, tournamentCreateDto.getStages().size())
+                .mapToObj(i -> {
+                    String stageName = tournamentCreateDto.getStages().get(i).getStageType();
+                    return TournamentStage.builder()
+                            .tournament(tournament)
+                            .stageOrder(i + 1)
+                            .stageType(Stage.fromName(stageName))
+                            .currentRound(0)
+                            .matches(new ArrayList<>())
+                            .build();
+                })
                 .collect(Collectors.toList());
+
         tournament.setStages(stages);
 
         tournamentRepository.save(tournament);
@@ -75,7 +88,7 @@ public class TournamentServiceImpl implements TournamentService {
 
         tournamentValidator.validateAccess(tournament.getId(), tournamentUpdateDto.getUserId());
 
-        tournament = tournamentMapper.updateEntity(tournamentUpdateDto, tournament);
+        tournamentMapper.updateEntity(tournamentUpdateDto, tournament);
 
         tournamentRepository.save(tournament);
 

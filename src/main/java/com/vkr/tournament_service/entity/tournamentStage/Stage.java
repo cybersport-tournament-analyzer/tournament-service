@@ -1,7 +1,9 @@
-package com.vkr.tournament_service.entity.tournament;
+package com.vkr.tournament_service.entity.tournamentStage;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Arrays;
 
 @Getter
 @RequiredArgsConstructor
@@ -14,11 +16,9 @@ public enum Stage {
     private final String name;
 
     public static Stage fromName(String name) {
-        for (Stage stage : Stage.values()) {
-            if (stage.getName().equalsIgnoreCase(name)) {
-                return stage;
-            }
-        }
-        throw new IllegalArgumentException("No such stage: " + name);
+        return Arrays.stream(values())
+                .filter(stage -> stage.name.equalsIgnoreCase(name))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown stage type: " + name));
     }
 }

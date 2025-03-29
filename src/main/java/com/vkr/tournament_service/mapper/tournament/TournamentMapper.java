@@ -3,47 +3,39 @@ package com.vkr.tournament_service.mapper.tournament;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
-import com.vkr.tournament_service.entity.tournament.Stage;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
+import com.vkr.tournament_service.mapper.match.MatchMapper;
 import com.vkr.tournament_service.mapper.team.TeamMapper;
-import org.mapstruct.*;
+import com.vkr.tournament_service.mapper.tournamentStage.TournamentStageMapper;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-@Mapper(componentModel = "spring", uses = {TeamMapper.class}, unmappedTargetPolicy = ReportingPolicy.IGNORE,
+@Mapper(componentModel = "spring",
+        uses = {TournamentStageMapper.class, MatchMapper.class, TeamMapper.class},
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TournamentMapper {
 
-    @Mapping(source = "tournamentStatus", target = "tournamentStatus", qualifiedByName = "getTournamentStatus")
-    @Mapping(source = "stages", target = "stages", qualifiedByName = "mapStagesToStringList")
-    @Mapping(source = "teams", target = "teams")
-    TournamentDto toDto(Tournament tournament);
+    @Mapping(target = "stages", source = "stages")
+    @Mapping(target = "matches", source = "matches")
+    @Mapping(target = "teams", source = "teams")
+    TournamentDto toDto(Tournament entity);
 
-    @Mapping(source = "stages", target = "stages", qualifiedByName = "mapStageNamesToStages")
-    Tournament toEntity(TournamentCreateDto tournamentCreateDto);
+    @Mapping(target = "stages", source = "stages")
+    @Mapping(target = "tournamentStatus", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "matches", ignore = true)
+    @Mapping(target = "teams", ignore = true)
+    Tournament toEntity(TournamentCreateDto dto);
 
-    @Mapping(source = "tournamentStatus", target = "tournamentStatus", qualifiedByName = "getTournamentStatus")
-    @Mapping(source = "stages", target = "stages", qualifiedByName = "mapStageNamesToStages", conditionExpression = "java(tournamentUpdateDto.getStages() != null)")
-    Tournament updateEntity(TournamentUpdateDto tournamentUpdateDto, @MappingTarget Tournament tournament);
+    @Mapping(target = "stages", ignore = true)
+    @Mapping(target = "matches", ignore = true)
+    @Mapping(target = "teams", ignore = true)
+    void updateEntity(TournamentUpdateDto dto, @MappingTarget Tournament entity);
 
-    @Named("getTournamentStatus")
-    default TournamentStatus getTournamentStatus(String tournamentStatus) {
-        return TournamentStatus.fromString(tournamentStatus);
-    }
-
-    @Named("mapStageNamesToStages")
-    default List<Stage> mapStageNamesToStages(List<String> stageNames) {
-        return stageNames.stream()
-                .map(Stage::fromName)
-                .collect(Collectors.toList());
-    }
-
-    @Named("mapStagesToStringList")
-    default List<String> mapStagesToStringList(List<Stage> stages) {
-        return stages.stream()
-                .map(Stage::getName)
-                .collect(Collectors.toList());
+    default TournamentStatus mapStatus(String status) {
+        return TournamentStatus.valueOf(status);
     }
 }

@@ -29,7 +29,7 @@ public class MatchServiceImpl implements MatchService {
     @Override
     public MatchDto startTournamentMatch(MatchCreateDto matchCreateDto, UUID tournamentId) {
 
-        TournamentMatch tournamentMatch = matchMapper.toEntity(matchCreateDto, tournamentId);
+        TournamentMatch tournamentMatch = matchMapper.toEntity(matchCreateDto);
 
         tournamentMatch.setMatchStatus("started");
         tournamentMatch.setTeam1Score(0);
@@ -45,7 +45,7 @@ public class MatchServiceImpl implements MatchService {
         lobbyStartProducer.produce(new LobbyStartEvent(tournamentMatch.getId(),
                 tournamentService.getTournamentById(tournamentId).getTournamentMode(),
                 tournamentMatch.getMatchFormat(),
-                tournamentMatch.getStartTime())
+                tournamentMatch.getSchedule().getScheduledStartTime().toLocalDateTime())
         );
 
         log.info("Tournament match started");

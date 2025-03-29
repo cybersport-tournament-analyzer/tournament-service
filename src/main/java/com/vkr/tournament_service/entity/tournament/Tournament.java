@@ -4,6 +4,8 @@ package com.vkr.tournament_service.entity.tournament;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
+import com.vkr.tournament_service.entity.tournamentStage.Stage;
+import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -63,29 +65,17 @@ public class Tournament {
     @Enumerated(EnumType.STRING)
     private TournamentStatus tournamentStatus;
 
-    @ElementCollection
-    @CollectionTable(name = "tournament_stages", joinColumns = @JoinColumn(name = "tournament_id"))
-    @Column(name = "stage_name")
-    @Enumerated(EnumType.STRING)
-    private List<Stage> stages = new ArrayList<>();
+    @Column(name = "current_stage_order", nullable = false)
+    private int currentStageOrder;
 
-    @Column(name = "current_stage_name", nullable = false)
-    private String currentStageName;
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TournamentStage> stages = new ArrayList<>();
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL)
     private List<TournamentMatch> matches = new ArrayList<>();
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL)
     private List<TournamentTeam> teams = new ArrayList<>();
-
-    @ManyToMany
-    @JoinTable(
-            name = "tournament_players",
-            joinColumns = @JoinColumn(name = "tournament_id"),
-            inverseJoinColumns = @JoinColumn(name = "player_id")
-    )
-    @MapKeyColumn(name = "team_name")
-    private Map<String, Player> players;
 
 
     @Override

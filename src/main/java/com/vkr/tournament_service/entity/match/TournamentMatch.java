@@ -1,15 +1,13 @@
 package com.vkr.tournament_service.entity.match;
 
-import com.vkr.tournament_service.entity.player.Player;
+import com.vkr.tournament_service.entity.schedule.TournamentSchedule;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
+import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,9 +25,12 @@ public class TournamentMatch {
     @UuidGenerator
     private UUID id;
 
-    @Column(name = "start_time", nullable = false)
-    @CreationTimestamp
-    private LocalDateTime startTime;
+    @OneToOne(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TournamentSchedule schedule;
+
+    @ManyToOne
+    @JoinColumn(name = "stage_id")
+    private TournamentStage stage;
 
     @ManyToOne
     @JoinColumn(name = "tournament_id", nullable = false)
@@ -57,6 +58,9 @@ public class TournamentMatch {
     @ManyToOne
     @JoinColumn(name = "team2_name", nullable = false, referencedColumnName = "team_name")
     private TournamentTeam team2;
+
+    @Column(name = "round", nullable = false)
+    private int round;
 
     @Transient
     private List<Match> matches = new ArrayList<>();

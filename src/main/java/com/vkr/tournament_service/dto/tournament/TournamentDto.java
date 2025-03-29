@@ -2,10 +2,7 @@ package com.vkr.tournament_service.dto.tournament;
 
 import com.vkr.tournament_service.dto.match.MatchDto;
 import com.vkr.tournament_service.dto.team.TeamDto;
-import com.vkr.tournament_service.entity.match.TournamentMatch;
-import com.vkr.tournament_service.entity.player.Player;
-import com.vkr.tournament_service.entity.team.TournamentTeam;
-import com.vkr.tournament_service.entity.tournament.Stage;
+import com.vkr.tournament_service.dto.tournamentStage.TournamentStageDto;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,32 +12,30 @@ import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
+// TournamentDto.java
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Jacksonized
 public class TournamentDto {
-
     private UUID id;
     private String tournamentName;
     private String creatorId;
-    private String tournamentMode;
     private Long teamsCount;
     private int substitutionsNumber;
+    private String tournamentMode;
     private String winnerTeamName;
     private LocalDateTime createdAt;
     private OffsetDateTime registrationStartTime;
     private OffsetDateTime registrationEndTime;
     private OffsetDateTime tournamentStartTime;
     private TournamentStatus tournamentStatus;
-    private List<String> stages;
-    private Integer currentStageNumber;
-    private List<MatchDto> matches = new ArrayList<>();
-    private List<TeamDto> teams = new ArrayList<>();
+    private Integer currentStageOrder;
+    private List<TournamentStageDto> stages;
+    private List<MatchDto> matches;
+    private List<TeamDto> teams;
 }
