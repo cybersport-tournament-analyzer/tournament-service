@@ -28,9 +28,6 @@ public class TournamentSchedule {
     @Column(name = "scheduled_start_time", nullable = false)
     private OffsetDateTime scheduledStartTime;
 
-    @Column(name = "scheduled_end_time")
-    private OffsetDateTime scheduledEndTime;
-
     @Column(name = "actual_start_time")
     private OffsetDateTime actualStartTime;
 

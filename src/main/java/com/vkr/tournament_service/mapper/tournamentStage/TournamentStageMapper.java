@@ -5,6 +5,7 @@ import com.vkr.tournament_service.dto.tournamentStage.TournamentStageUpdateDto;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
+import com.vkr.tournament_service.mapper.match.MatchMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring",
+        uses = {MatchMapper.class},
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TournamentStageMapper {
 

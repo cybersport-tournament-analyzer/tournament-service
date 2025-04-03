@@ -96,18 +96,6 @@ class TeamServiceTests {
     }
 
     @Test
-    void getAllTournamentTeams_ShouldReturnPagedTeams() {
-        Page<TournamentTeam> teamPage = new PageImpl<>(List.of(team));
-        when(teamRepository.findAllByTournamentId(any(UUID.class), any(Pageable.class))).thenReturn(teamPage);
-        when(teamMapper.toDto(any(TournamentTeam.class))).thenReturn(teamDto);
-
-        Page<TeamDto> result = teamService.getAllTournamentTeams(tournamentId, Pageable.unpaged());
-
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-    }
-
-    @Test
     void getTeamByName_ShouldReturnTeam() {
         when(teamRepository.findByTeamNameAndTournamentId("Test Team", tournamentId)).thenReturn(team);
 

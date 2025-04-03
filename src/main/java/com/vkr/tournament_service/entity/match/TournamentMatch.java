@@ -52,11 +52,11 @@ public class TournamentMatch {
     private String matchStatus;
 
     @ManyToOne
-    @JoinColumn(name = "team1_name", nullable = false, referencedColumnName = "team_name")
+    @JoinColumn(name = "team1_name", referencedColumnName = "team_name")
     private TournamentTeam team1;
 
     @ManyToOne
-    @JoinColumn(name = "team2_name", nullable = false, referencedColumnName = "team_name")
+    @JoinColumn(name = "team2_name", referencedColumnName = "team_name")
     private TournamentTeam team2;
 
     @Column(name = "round", nullable = false)

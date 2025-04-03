@@ -43,6 +43,9 @@ public class TournamentTeam {
     @Column(name = "average_rating")
     private int averageRating;
 
+    @Column(name = "seed", nullable = false)
+    private int seed;
+
     @ManyToMany
     @JoinTable(
             name = "team_players",

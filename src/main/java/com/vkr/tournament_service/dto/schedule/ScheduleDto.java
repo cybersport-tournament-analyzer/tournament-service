@@ -19,7 +19,6 @@ public class ScheduleDto {
     private UUID id;
     private UUID matchId;
     private OffsetDateTime scheduledStartTime;
-    private OffsetDateTime scheduledEndTime;
     private OffsetDateTime actualStartTime;
     private OffsetDateTime actualEndTime;
     private ScheduleStatus status;
