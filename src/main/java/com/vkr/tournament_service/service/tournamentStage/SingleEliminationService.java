@@ -48,12 +48,19 @@ public class SingleEliminationService {
         TournamentStage stage = stageRepository.findAllByTournamentId(tournamentId).get(stageOrder);
         stage.setTotalRounds(totalRounds);
         stage.setCurrentRound(1);
-
-        stage = stageRepository.save(stage);
+        stageRepository.save(stage);
 
         List<TournamentMatch> matches = new ArrayList<>();
-        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime(), new AtomicInteger(1), new HashMap<>());
-//        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), new AtomicInteger(1), new HashMap<>());
+        AtomicInteger matchCounter = new AtomicInteger(1);
+        Map<Integer, TournamentMatch> matchMap = new HashMap<>();
+
+        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), matchCounter, matchMap);
+
+        // Добавляем матч за 3-е место, если включен
+        if (stage.isMatchForTheThirdPlace()) {
+            generateThirdPlaceMatch(matches, stage, tournament, matchCounter, matchMap);
+        }
+
         stage.setMatches(matches);
         stageRepository.save(stage);
     }
@@ -82,6 +89,8 @@ public class SingleEliminationService {
             TournamentTeam team2 = teams.get(teams.size() - 1 - i);
 
             int matchNumber = matchCounter.getAndIncrement(); // Уникальный номер матча
+            boolean isFinal = round == stage.getTotalRounds();
+            String matchFormat = isFinal ? stage.getFinalMatchFormat() : stage.getMatchFormat();
 
             // Создаём матч
             TournamentMatch match = TournamentMatch.builder()
@@ -89,7 +98,7 @@ public class SingleEliminationService {
                     .team1(team1)
                     .team2(team2)
                     .round(round)
-                    .matchFormat("bo1")
+                    .matchFormat(matchFormat)
                     .team1Score(0)
                     .team2Score(0)
                     .tournament(tournament)
@@ -124,7 +133,7 @@ public class SingleEliminationService {
                     schedule.setStatus(ScheduleStatus.COMPLETED);
                     match.setSchedule(schedule);
                     match.setWinnerTeamName("BYE");
-                    match.setTeam1Score(1);
+                    match.setTeam1Score(getMaxScore(matchFormat));
                 }
                 nextRoundTeams.add(null);
             } else if (team1 == null && bothParentsDone) {
@@ -133,7 +142,7 @@ public class SingleEliminationService {
                 schedule.setStatus(ScheduleStatus.COMPLETED);
                 match.setSchedule(schedule);
                 match.setWinnerTeamName(team2.getTeamName());
-                match.setTeam2Score(1);
+                match.setTeam2Score(getMaxScore(matchFormat));
                 nextRoundTeams.add(team2);
             } else if (team2 == null && bothParentsDone) {
                 schedule.setActualStartTime(startTime);
@@ -141,7 +150,7 @@ public class SingleEliminationService {
                 schedule.setStatus(ScheduleStatus.COMPLETED);
                 match.setSchedule(schedule);
                 match.setWinnerTeamName(team1.getTeamName());
-                match.setTeam1Score(1);
+                match.setTeam1Score(getMaxScore(matchFormat));
                 nextRoundTeams.add(team1);
             } else {
                 nextRoundTeams.add(null);
@@ -167,38 +176,58 @@ public class SingleEliminationService {
         return power;
     }
 
-    public void advanceToNextRound(TournamentStage stage) {
-        if (stage.getCurrentRound() >= stage.getTotalRounds()) {
-            throw new IllegalStateException("Tournament is already finished");
-        }
-
-        List<TournamentMatch> previousRoundMatches = stage.getMatches().stream()
-                .filter(match -> match.getRound() == stage.getCurrentRound())
-                .toList();
-
-        List<TournamentTeam> winners = previousRoundMatches.stream()
-                .map(tournamentMatch -> teamRepository.findByTeamNameAndTournamentId(tournamentMatch.getWinnerTeamName(),
-                        stage.getTournament().getId()))
-                .toList();
-
-        int nextRound = stage.getCurrentRound() + 1;
-        List<TournamentMatch> nextRoundMatches = new ArrayList<>();
-
-        for (int i = 0; i < winners.size() / 2; i++) {
-            TournamentMatch match = TournamentMatch.builder()
-                    .stage(stage)
-                    .team1(winners.get(i))
-                    .team2(winners.get(winners.size() - 1 - i))
-                    .round(nextRound)
-                    .build();
-            nextRoundMatches.add(match);
-        }
-
-        matchRepository.saveAll(nextRoundMatches);
-        stage.getMatches().addAll(nextRoundMatches);
-        stage.setCurrentRound(nextRound);
-        stageRepository.save(stage);
+    private int getMaxScore(String matchFormat){
+        return switch (matchFormat) {
+            case "bo3" -> 2;
+            case "bo5" -> 3;
+            default -> 1;
+        };
     }
+
+    private void generateThirdPlaceMatch(List<TournamentMatch> matches, TournamentStage stage,
+                                         Tournament tournament, AtomicInteger matchCounter,
+                                         Map<Integer, TournamentMatch> matchMap) {
+        List<TournamentMatch> semiFinals = matches.stream()
+                .filter(m -> m.getRound() == stage.getTotalRounds() - 1)
+                .toList();
+
+        if (semiFinals.size() < 2) return; // Должно быть два полуфинала
+
+        TournamentTeam loser1 = getLoser(semiFinals.get(0));
+        TournamentTeam loser2 = getLoser(semiFinals.get(1));
+
+
+        int matchNumber = matchCounter.getAndIncrement();
+        String matchFormat = stage.getFinalMatchFormat(); // Можно задать отдельный формат
+
+        TournamentMatch thirdPlaceMatch = TournamentMatch.builder()
+                .stage(stage)
+                .team1(loser1)
+                .team2(loser2)
+                .round(stage.getTotalRounds())
+                .matchNumber(matchNumber)
+                .matchFormat(matchFormat)
+                .team1Score(0)
+                .team2Score(0)
+                .tournament(tournament)
+                .build();
+
+        TournamentSchedule schedule = TournamentSchedule.builder()
+                .match(thirdPlaceMatch)
+                .scheduledStartTime(semiFinals.get(0).getSchedule().getScheduledStartTime().plusDays(1).minusHours(3))
+                .status(ScheduleStatus.SCHEDULED)
+                .build();
+
+        thirdPlaceMatch.setSchedule(schedule);
+        matches.add(thirdPlaceMatch);
+        matchMap.put(matchNumber, thirdPlaceMatch);
+    }
+
+    private TournamentTeam getLoser(TournamentMatch match) {
+        if (match.getWinnerTeamName() == null) return null;
+        return match.getTeam1().getTeamName().equals(match.getWinnerTeamName()) ? match.getTeam2() : match.getTeam1();
+    }
+
 
     public List<Map<String, Object>> getBracket(UUID tournamentId) {
         List<TournamentMatch> matches = matchRepository.findAllByTournamentIdOrderByRoundAsc(tournamentId);

@@ -43,10 +43,10 @@ public class TournamentStage {
     @Column(name = "final_match_format", nullable = false)
     private String finalMatchFormat;
 
-    @Column(name = "match_format")
+    @Column(name = "match_format", nullable = false)
     private String matchFormat;
 
-    @Column(name = "match_for_the_third_place")
+    @Column(name = "match_for_the_third_place", nullable = false)
     private boolean matchForTheThirdPlace;
 
     @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL)
