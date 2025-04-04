@@ -52,7 +52,8 @@ public class SingleEliminationService {
         stage = stageRepository.save(stage);
 
         List<TournamentMatch> matches = new ArrayList<>();
-        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), new AtomicInteger(1), new HashMap<>());
+        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime(), new AtomicInteger(1), new HashMap<>());
+//        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), new AtomicInteger(1), new HashMap<>());
         stage.setMatches(matches);
         stageRepository.save(stage);
     }

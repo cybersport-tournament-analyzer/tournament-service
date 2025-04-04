@@ -23,9 +23,8 @@ import java.util.UUID;
 public class TournamentController {
 
     private final TournamentService tournamentService;
-    private final TournamentMapper tournamentMapper;
     private final SingleEliminationService singleEliminationService;
-
+    private final TournamentMapper tournamentMapper;
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Get all tournaments")

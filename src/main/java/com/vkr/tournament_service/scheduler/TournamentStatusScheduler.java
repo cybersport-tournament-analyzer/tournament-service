@@ -1,4 +1,4 @@
-package com.vkr.tournament_service.service.tournament;
+package com.vkr.tournament_service.scheduler;
 
 
 import com.vkr.tournament_service.entity.tournament.Tournament;

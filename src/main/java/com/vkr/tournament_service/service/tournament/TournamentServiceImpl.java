@@ -62,6 +62,9 @@ public class TournamentServiceImpl implements TournamentService {
                             .stageOrder(i + 1)
                             .stageType(Stage.fromName(stageName))
                             .currentRound(0)
+                            .finalMatchFormat(tournamentCreateDto.getStages().get(i).getFinalMatchFormat())
+                            .matchFormat(tournamentCreateDto.getStages().get(i).getMatchFormat())
+                            .matchForTheThirdPlace(tournamentCreateDto.getStages().get(i).isMatchForTheThirdPlace())
                             .matches(new ArrayList<>())
                             .build();
                 })

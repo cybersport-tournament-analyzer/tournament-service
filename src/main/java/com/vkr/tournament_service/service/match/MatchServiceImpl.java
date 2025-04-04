@@ -3,6 +3,7 @@ package com.vkr.tournament_service.service.match;
 import com.vkr.tournament_service.dto.match.MatchCreateDto;
 import com.vkr.tournament_service.dto.match.MatchDto;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
+import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent;
 import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
 import com.vkr.tournament_service.mapper.match.MatchMapper;
