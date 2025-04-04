@@ -16,6 +16,5 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MatchStartEvent implements KafkaEvent {
     private UUID tournamentMatchId;
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private OffsetDateTime startTime;
 }
