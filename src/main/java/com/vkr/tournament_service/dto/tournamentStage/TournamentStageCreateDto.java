@@ -20,4 +20,10 @@ public class TournamentStageCreateDto {
     private String stageType;
     @Min(0)
     private int currentRound;
+    @NotBlank
+    private String finalMatchFormat;
+    @NotBlank
+    private String matchFormat;
+    @NotBlank
+    private boolean matchForTheThirdPlace;
 }

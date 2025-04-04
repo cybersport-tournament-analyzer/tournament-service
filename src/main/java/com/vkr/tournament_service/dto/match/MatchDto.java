@@ -21,8 +21,8 @@ public class MatchDto {
     private Integer team1Score;
     private Integer team2Score;
     private Integer round;
+    private Integer matchNumber;
     private String winnerTeamName;
-    private String matchStatus;
     private String team1Name;
     private String team2Name;
     private ScheduleDto schedule;

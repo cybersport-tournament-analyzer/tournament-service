@@ -36,6 +36,5 @@ public class TournamentDto {
     private TournamentStatus tournamentStatus;
     private Integer currentStageOrder;
     private List<TournamentStageDto> stages;
-    private List<MatchDto> matches;
     private List<TeamDto> teams;
 }

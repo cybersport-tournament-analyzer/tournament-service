@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
@@ -51,13 +52,14 @@ public class SingleEliminationService {
         stage = stageRepository.save(stage);
 
         List<TournamentMatch> matches = new ArrayList<>();
-        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1));
+        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), new AtomicInteger(1), new HashMap<>());
         stage.setMatches(matches);
         stageRepository.save(stage);
     }
 
 
-    private void generateBracket(List<TournamentMatch> matches, List<TournamentTeam> teams, TournamentStage stage, Tournament tournament, int round, OffsetDateTime startTime) {
+    private void generateBracket(List<TournamentMatch> matches, List<TournamentTeam> teams, TournamentStage stage, Tournament tournament, int round,
+                                 OffsetDateTime startTime, AtomicInteger matchCounter, Map<Integer, TournamentMatch> matchMap) {
         if (teams.size() < 2) return;
 
         // Определяем ближайшую степень двойки
@@ -78,6 +80,8 @@ public class SingleEliminationService {
             TournamentTeam team1 = teams.get(i);
             TournamentTeam team2 = teams.get(teams.size() - 1 - i);
 
+            int matchNumber = matchCounter.getAndIncrement(); // Уникальный номер матча
+
             // Создаём матч
             TournamentMatch match = TournamentMatch.builder()
                     .stage(stage)
@@ -87,8 +91,8 @@ public class SingleEliminationService {
                     .matchFormat("bo1")
                     .team1Score(0)
                     .team2Score(0)
-                    .matchStatus("SOON")
                     .tournament(tournament)
+                    .matchNumber(matchNumber)
                     .build();
 
             // Создаём расписание
@@ -99,16 +103,46 @@ public class SingleEliminationService {
                     .build();
 
             match.setSchedule(schedule); // Привязываем расписание к матчу
-
             roundMatches.add(match);
+            matchMap.put(matchNumber, match);
+
+            int parentMatch1 = matchNumber - totalTeams / (int) Math.pow(2, round);
+            int parentMatch2 = matchNumber - totalTeams / (int) Math.pow(2, round) + 1;
+
+            TournamentMatch prevMatch1 = matchMap.get(parentMatch1);
+            TournamentMatch prevMatch2 = matchMap.get(parentMatch2);
+
+            boolean parent1Done = prevMatch1 == null || prevMatch1.getSchedule().getStatus() == ScheduleStatus.COMPLETED;
+            boolean parent2Done = prevMatch2 == null || prevMatch2.getSchedule().getStatus() == ScheduleStatus.COMPLETED;
+            boolean bothParentsDone = parent1Done && parent2Done;
+
             if (team1 == null && team2 == null) {
+                if (bothParentsDone) {
+                    schedule.setActualStartTime(startTime);
+                    schedule.setActualEndTime(startTime);
+                    schedule.setStatus(ScheduleStatus.COMPLETED);
+                    match.setSchedule(schedule);
+                    match.setWinnerTeamName("BYE");
+                    match.setTeam1Score(1);
+                }
                 nextRoundTeams.add(null);
-            } else if (team1 == null) {
+            } else if (team1 == null && bothParentsDone) {
+                schedule.setActualStartTime(startTime);
+                schedule.setActualEndTime(startTime);
+                schedule.setStatus(ScheduleStatus.COMPLETED);
+                match.setSchedule(schedule);
+                match.setWinnerTeamName(team2.getTeamName());
+                match.setTeam2Score(1);
                 nextRoundTeams.add(team2);
-            } else if (team2 == null) {
+            } else if (team2 == null && bothParentsDone) {
+                schedule.setActualStartTime(startTime);
+                schedule.setActualEndTime(startTime);
+                schedule.setStatus(ScheduleStatus.COMPLETED);
+                match.setSchedule(schedule);
+                match.setWinnerTeamName(team1.getTeamName());
+                match.setTeam1Score(1);
                 nextRoundTeams.add(team1);
-            }
-            else{
+            } else {
                 nextRoundTeams.add(null);
             }
 
@@ -120,7 +154,7 @@ public class SingleEliminationService {
 
         // Запускаем следующий раунд через 1 день после последнего матча
         OffsetDateTime nextRoundStartTime = matchTime.plusDays(1);
-        generateBracket(matches, nextRoundTeams, stage, tournament, round + 1, nextRoundStartTime);
+        generateBracket(matches, nextRoundTeams, stage, tournament, round + 1, nextRoundStartTime, matchCounter, matchMap);
     }
 
 

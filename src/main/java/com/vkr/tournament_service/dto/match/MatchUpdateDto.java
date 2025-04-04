@@ -15,5 +15,4 @@ public class MatchUpdateDto {
     private Integer team1Score;
     private Integer team2Score;
     private String winnerTeamName;
-    private String matchStatus;
 }

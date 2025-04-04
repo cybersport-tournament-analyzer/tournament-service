@@ -14,24 +14,21 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring",
-        uses = {TournamentStageMapper.class, MatchMapper.class, TeamMapper.class},
+        uses = {TournamentStageMapper.class, TeamMapper.class},
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface TournamentMapper {
 
     @Mapping(target = "stages", source = "stages")
-    @Mapping(target = "matches", source = "matches")
     @Mapping(target = "teams", source = "teams")
     TournamentDto toDto(Tournament entity);
 
     @Mapping(target = "stages", source = "stages")
     @Mapping(target = "tournamentStatus", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "matches", ignore = true)
     @Mapping(target = "teams", ignore = true)
     Tournament toEntity(TournamentCreateDto dto);
 
     @Mapping(target = "stages", ignore = true)
-    @Mapping(target = "matches", ignore = true)
     @Mapping(target = "teams", ignore = true)
     void updateEntity(TournamentUpdateDto dto, @MappingTarget Tournament entity);
 

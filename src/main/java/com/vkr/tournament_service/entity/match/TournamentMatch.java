@@ -48,9 +48,6 @@ public class TournamentMatch {
     @Column(name = "winner_team_name")
     private String winnerTeamName;
 
-    @Column(name = "match_status", nullable = false)
-    private String matchStatus;
-
     @ManyToOne
     @JoinColumn(name = "team1_name", referencedColumnName = "team_name")
     private TournamentTeam team1;
@@ -61,6 +58,9 @@ public class TournamentMatch {
 
     @Column(name = "round", nullable = false)
     private int round;
+
+    @Column(name = "match_number", nullable = false)
+    private int matchNumber;
 
     @Transient
     private List<Match> matches = new ArrayList<>();

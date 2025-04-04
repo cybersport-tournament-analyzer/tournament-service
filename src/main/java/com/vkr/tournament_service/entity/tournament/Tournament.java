@@ -1,10 +1,7 @@
 package com.vkr.tournament_service.entity.tournament;
 
 
-import com.vkr.tournament_service.entity.match.TournamentMatch;
-import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
-import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,7 +11,10 @@ import org.hibernate.proxy.HibernateProxy;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Builder
 @Getter
@@ -70,9 +70,6 @@ public class Tournament {
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentStage> stages = new ArrayList<>();
-
-    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL)
-    private List<TournamentMatch> matches = new ArrayList<>();
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL)
     private List<TournamentTeam> teams = new ArrayList<>();

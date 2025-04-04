@@ -31,7 +31,6 @@ public class MatchServiceImpl implements MatchService {
 
         TournamentMatch tournamentMatch = matchMapper.toEntity(matchCreateDto);
 
-        tournamentMatch.setMatchStatus("started");
         tournamentMatch.setTeam1Score(0);
         tournamentMatch.setTeam2Score(0);
         tournamentMatch.setTeam1(teamService.getTeamByName(matchCreateDto.getTeam1Name(), tournamentId));

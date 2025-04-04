@@ -22,5 +22,8 @@ public class TournamentStageDto {
     private String stageType;
     private int currentRound;
     private int totalRounds;
+    private String finalMatchFormat;
+    private String matchFormat;
+    private boolean matchForTheThirdPlace;
     private List<MatchDto> matches;
 }
