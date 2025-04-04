@@ -272,5 +272,44 @@ public class SingleEliminationService {
         return teamData;
     }
 
+//    private void advanceTeam(TournamentMatch match) {
+//        TournamentStage stage = match.getStage();
+//        int matchNumber = match.getMatchNumber();
+//        int round = match.getRound();
+//        int totalTeams = stage.getTotalTeams();
+//
+//        // Определим матч-ребёнка
+//        int childRound = round + 1;
+//        int childMatchNumber = totalTeams / (int) Math.pow(2, childRound) + (matchNumber - 1) / 2 + 1;
+//
+//        Optional<TournamentMatch> childOpt = Optional.ofNullable(matchRepository.findByStageAndRoundAndMatchNumber(stage, childRound, childMatchNumber));
+//
+//        TournamentMatch childMatch = childOpt.orElseGet(() -> {
+//            TournamentMatch m = TournamentMatch.builder()
+//                    .stage(stage)
+//                    .round(childRound)
+//                    .matchNumber(childMatchNumber)
+//                    .matchFormat(childRound == stage.getTotalRounds() ? stage.getFinalMatchFormat() : stage.getMatchFormat())
+//                    .tournament(stage.getTournament())
+//                    .build();
+//
+//            TournamentSchedule schedule = TournamentSchedule.builder()
+//                    .match(m)
+//                    .scheduledStartTime(match.getSchedule().getScheduledStartTime().plusDays(1))
+//                    .status(ScheduleStatus.SCHEDULED)
+//                    .build();
+//
+//            m.setSchedule(schedule);
+//            return m;
+//        });
+//
+//        if (childMatch.getTeam1() == null) {
+//            childMatch.setTeam1(winner);
+//        } else if (childMatch.getTeam2() == null) {
+//            childMatch.setTeam2(winner);
+//        }
+//
+//        matchRepository.save(childMatch);
+//    }
 }
 

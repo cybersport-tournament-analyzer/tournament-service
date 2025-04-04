@@ -1,11 +1,12 @@
 package com.vkr.tournament_service.kafka.consumer.match;
 
 import com.vkr.tournament_service.entity.match.TournamentMatch;
-import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
+import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.exception.KafkaConsumerException;
 import com.vkr.tournament_service.kafka.consumer.KafkaConsumer;
 import com.vkr.tournament_service.kafka.event.matchEnd.MatchEndEvent;
 import com.vkr.tournament_service.repository.match.MatchRepository;
+import com.vkr.tournament_service.service.match.MatchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,12 +14,15 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MatchEndConsumer implements KafkaConsumer<MatchEndEvent> {
 
     private final MatchRepository matchRepository;
+    private final MatchService matchService;
 
     @Override
     @Transactional
@@ -26,15 +30,11 @@ public class MatchEndConsumer implements KafkaConsumer<MatchEndEvent> {
     public void consume(MatchEndEvent event, Acknowledgment ack) {
         log.info("Consuming match end event: {}", event);
 
-        TournamentMatch currMatch = matchRepository.findById(event.getTournamentMatchId()).orElse(null);
+        TournamentMatch currMatch = matchRepository.findById(event.getTournamentMatchId()).orElseThrow(
+                () -> new EntityNotFoundException("Match not found: " + event.getTournamentMatchId()));
 
         try {
-            assert currMatch != null;
-            currMatch.setTeam1Score(event.getTeam1Score());
-            currMatch.setTeam2Score(event.getTeam2Score());
-            currMatch.getSchedule().setStatus(ScheduleStatus.COMPLETED);
-            currMatch.getSchedule().setActualEndTime(event.getEndTime());
-            matchRepository.save(currMatch);
+            matchService.updateMatchResults(currMatch, event);
         } catch (Exception e) {
             throw new KafkaConsumerException(e);
 

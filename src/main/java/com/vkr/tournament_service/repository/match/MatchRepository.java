@@ -1,6 +1,7 @@
 package com.vkr.tournament_service.repository.match;
 
 import com.vkr.tournament_service.entity.match.TournamentMatch;
+import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -10,4 +11,6 @@ import java.util.UUID;
 @Repository
 public interface MatchRepository extends JpaRepository<TournamentMatch, UUID> {
     List<TournamentMatch> findAllByTournamentIdOrderByRoundAsc(UUID tournamentId);
+
+    TournamentMatch findByStageAndRoundAndMatchNumber(TournamentStage stage, int childRound, int childMatchNumber);
 }
