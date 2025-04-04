@@ -19,7 +19,6 @@ public interface MatchMapper {
     @Mapping(target = "team1", ignore = true)
     @Mapping(target = "team2", ignore = true)
     @Mapping(target = "schedule", ignore = true)
-    @Mapping(target = "matches", ignore = true)
     TournamentMatch toEntity(MatchCreateDto dto);
 
     @Mapping(target = "tournamentId", source = "tournament.id")
@@ -32,6 +31,5 @@ public interface MatchMapper {
     @Mapping(target = "team1", ignore = true)
     @Mapping(target = "team2", ignore = true)
     @Mapping(target = "schedule", ignore = true)
-    @Mapping(target = "matches", ignore = true)
     void updateEntity(MatchUpdateDto dto, @MappingTarget TournamentMatch entity);
 }
