@@ -1,9 +1,9 @@
 package com.vkr.tournament_service.service.match;
 
-import com.vkr.tournament_service.dto.match.MatchCreateDto;
 import com.vkr.tournament_service.dto.match.MatchDto;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.tournament.Tournament;
+import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent;
 import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
 import com.vkr.tournament_service.mapper.match.MatchMapper;
@@ -24,20 +24,12 @@ public class MatchServiceImpl implements MatchService {
     private final MatchMapper matchMapper;
     private final LobbyStartProducer lobbyStartProducer;
     private final MatchRepository matchRepository;
-    private final TeamService teamService;
     private final TournamentService tournamentService;
 
     @Override
-    public MatchDto startTournamentMatch(MatchCreateDto matchCreateDto, UUID tournamentId) {
+    public MatchDto startTournamentMatch(UUID matchId, UUID tournamentId) {
 
-        TournamentMatch tournamentMatch = matchMapper.toEntity(matchCreateDto);
-
-        tournamentMatch.setTeam1Score(0);
-        tournamentMatch.setTeam2Score(0);
-        tournamentMatch.setTeam1(teamService.getTeamByName(matchCreateDto.getTeam1Name(), tournamentId));
-        tournamentMatch.setTeam2(teamService.getTeamByName(matchCreateDto.getTeam2Name(), tournamentId));
-
-        matchRepository.save(tournamentMatch);
+        TournamentMatch tournamentMatch = matchRepository.findById(matchId).orElseThrow(() -> new EntityNotFoundException("Tournament match not found"));
 
         System.out.println(tournamentMatch.getTournament().getTournamentMode());
         System.out.println(tournamentMatch.getTournament());

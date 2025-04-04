@@ -62,7 +62,4 @@ public class TournamentMatch {
     @Column(name = "match_number", nullable = false)
     private int matchNumber;
 
-    @Transient
-    private List<Match> matches = new ArrayList<>();
-
 }

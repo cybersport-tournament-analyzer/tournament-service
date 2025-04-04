@@ -42,6 +42,7 @@ public class KafkaConsumerConfig {
         props.put(JsonDeserializer.TYPE_MAPPINGS,
                 """
                 match-end:com.vkr.tournament_service.kafka.event.matchEnd.MatchEndEvent,
+                match-start:com.vkr.tournament_service.kafka.event.matchStart.MatchStartEvent,
                 lobby-start:com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent
                 """);
 
