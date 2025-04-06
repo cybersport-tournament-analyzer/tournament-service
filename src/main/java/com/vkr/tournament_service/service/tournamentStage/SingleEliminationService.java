@@ -237,27 +237,27 @@ public class SingleEliminationService {
     }
 
 
-    public List<Map<String, Object>> getBracket(UUID tournamentId) {
+    public List<List<List<Map<String, Object>>>> getBracket(UUID tournamentId) {
         List<TournamentMatch> matches = matchRepository.findAllByTournamentIdOrderByRoundAsc(tournamentId);
-        List<Map<String, Object>> bracket = new ArrayList<>();
+        List<List<List<Map<String, Object>>>> bracket = new ArrayList<>();
+
+        Integer currentRound = null;
+        List<List<Map<String, Object>>> currentRoundMatches = null;
 
         for (TournamentMatch match : matches) {
-            Map<String, Object> matchData = new HashMap<>();
-            matchData.put("round", match.getRound());
+            int round = match.getRound();
 
-            // Обработка team1
-            matchData.put("team1", processTeamData(
-                    match.getTeam1(),
-                    match.getTeam1Score()
-            ));
+            if (currentRound == null || round != currentRound) {
+                currentRound = round;
+                currentRoundMatches = new ArrayList<>();
+                bracket.add(currentRoundMatches);
+            }
 
-            // Обработка team2
-            matchData.put("team2", processTeamData(
-                    match.getTeam2(),
-                    match.getTeam2Score()
-            ));
+            List<Map<String, Object>> matchData = new ArrayList<>();
+            matchData.add(processTeamData(match.getTeam1(), match.getTeam1Score()));
+            matchData.add(processTeamData(match.getTeam2(), match.getTeam2Score()));
 
-            bracket.add(matchData);
+            currentRoundMatches.add(matchData);
         }
 
         return bracket;
@@ -280,44 +280,47 @@ public class SingleEliminationService {
         return teamData;
     }
 
-//    private void advanceTeam(TournamentMatch match) {
-//        TournamentStage stage = match.getStage();
-//        int matchNumber = match.getMatchNumber();
-//        int round = match.getRound();
-//        int totalTeams = stage.getTotalTeams();
-//
-//        // Определим матч-ребёнка
-//        int childRound = round + 1;
-//        int childMatchNumber = totalTeams / (int) Math.pow(2, childRound) + (matchNumber - 1) / 2 + 1;
-//
-//        Optional<TournamentMatch> childOpt = Optional.ofNullable(matchRepository.findByStageAndRoundAndMatchNumber(stage, childRound, childMatchNumber));
-//
-//        TournamentMatch childMatch = childOpt.orElseGet(() -> {
-//            TournamentMatch m = TournamentMatch.builder()
-//                    .stage(stage)
-//                    .round(childRound)
-//                    .matchNumber(childMatchNumber)
-//                    .matchFormat(childRound == stage.getTotalRounds() ? stage.getFinalMatchFormat() : stage.getMatchFormat())
-//                    .tournament(stage.getTournament())
-//                    .build();
-//
-//            TournamentSchedule schedule = TournamentSchedule.builder()
-//                    .match(m)
-//                    .scheduledStartTime(match.getSchedule().getScheduledStartTime().plusDays(1))
-//                    .status(ScheduleStatus.SCHEDULED)
-//                    .build();
-//
-//            m.setSchedule(schedule);
-//            return m;
-//        });
-//
-//        if (childMatch.getTeam1() == null) {
-//            childMatch.setTeam1(winner);
-//        } else if (childMatch.getTeam2() == null) {
-//            childMatch.setTeam2(winner);
-//        }
-//
-//        matchRepository.save(childMatch);
-//    }
+    public void advanceTeam(TournamentMatch match) {
+        TournamentStage stage = match.getStage();
+        int matchNumber = match.getMatchNumber();
+        int round = match.getRound();
+        int totalTeams = Math.toIntExact(stage.getTournament().getTeamsCount());
+
+        if (round == stage.getTotalRounds()) {
+            return;
+        }
+
+        // Определим матч-ребёнка
+        int childRound = round + 1;
+        int childMatchNumber = totalTeams / (int) Math.pow(2, round) + (matchNumber - 1) / 2 + 1;
+
+        TournamentMatch childMatch = matchRepository.findByStageAndRoundAndMatchNumber(stage, childRound, childMatchNumber);
+
+        TournamentTeam winner = match.getWinnerTeamName().equals(match.getTeam1().getTeamName()) ? match.getTeam1() : match.getTeam2();
+        TournamentTeam loser = match.getWinnerTeamName().equals(match.getTeam1().getTeamName()) ? match.getTeam2() : match.getTeam1();
+
+
+        if ((matchNumber - 1) % 2 == 0) {
+            childMatch.setTeam1(winner);
+        } else {
+            childMatch.setTeam2(winner);
+        }
+        matchRepository.save(childMatch);
+
+        if (round == stage.getTotalRounds() - 1 && stage.isMatchForTheThirdPlace()) {
+            int thirdPlaceMatchNumber = childMatchNumber + 1;
+            TournamentMatch thirdPlaceMatch = matchRepository.findByStageAndRoundAndMatchNumber(
+                    stage,
+                    childRound,
+                    thirdPlaceMatchNumber
+            );
+            if (matchNumber % 2 == 1) {
+                thirdPlaceMatch.setTeam1(loser);
+            } else {
+                thirdPlaceMatch.setTeam2(loser);
+            }
+            matchRepository.save(thirdPlaceMatch);
+        }
+    }
 }
 

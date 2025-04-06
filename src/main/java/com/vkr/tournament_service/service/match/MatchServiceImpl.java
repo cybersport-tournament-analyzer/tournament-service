@@ -10,6 +10,7 @@ import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
 import com.vkr.tournament_service.mapper.match.MatchMapper;
 import com.vkr.tournament_service.repository.match.MatchRepository;
 import com.vkr.tournament_service.service.tournament.TournamentService;
+import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,14 +26,18 @@ public class MatchServiceImpl implements MatchService {
     private final LobbyStartProducer lobbyStartProducer;
     private final MatchRepository matchRepository;
     private final TournamentService tournamentService;
+    private final SingleEliminationService singleEliminationService;
 
     @Override
     public void updateMatchResults(TournamentMatch match, MatchEndEvent event) {
         match.setTeam1Score(event.getTeam1Score());
         match.setTeam2Score(event.getTeam2Score());
-        if(isSeriesFinished(match)){
+        if (isSeriesFinished(match)) {
             match.getSchedule().setStatus(ScheduleStatus.COMPLETED);
             match.getSchedule().setActualEndTime(event.getEndTime());
+            match.setWinnerTeamName(match.getTeam1Score() > match.getTeam2Score() ?
+                    match.getTeam1().getTeamName() : match.getTeam2().getTeamName());
+            singleEliminationService.advanceTeam(match);
         }
         matchRepository.save(match);
     }

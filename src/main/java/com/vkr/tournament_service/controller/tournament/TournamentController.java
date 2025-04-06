@@ -25,6 +25,7 @@ public class TournamentController {
     private final TournamentService tournamentService;
     private final SingleEliminationService singleEliminationService;
     private final TournamentMapper tournamentMapper;
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Get all tournaments")
@@ -50,7 +51,7 @@ public class TournamentController {
     @GetMapping("/{tournamentId}/bracket")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Get tournament bracket by id")
-    public List<Map<String, Object>> getTournamentBracketById(@PathVariable String tournamentId) {
+    public List<List<List<Map<String, Object>>>> getTournamentBracketById(@PathVariable String tournamentId) {
         return singleEliminationService.getBracket(UUID.fromString(tournamentId));
     }
 
