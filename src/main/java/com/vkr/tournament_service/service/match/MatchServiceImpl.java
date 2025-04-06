@@ -4,7 +4,9 @@ import com.vkr.tournament_service.dto.match.MatchDto;
 import com.vkr.tournament_service.dto.team.TeamDto;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
+import com.vkr.tournament_service.entity.schedule.TournamentSchedule;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
+import com.vkr.tournament_service.exception.InvalidTournamentTimeException;
 import com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent;
 import com.vkr.tournament_service.kafka.event.matchEnd.MatchEndEvent;
 import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
@@ -16,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,6 +44,26 @@ public class MatchServiceImpl implements MatchService {
                     match.getTeam1().getTeamName() : match.getTeam2().getTeamName());
             singleEliminationService.advanceTeam(match);
         }
+        matchRepository.save(match);
+    }
+
+    @Override
+    public List<TournamentMatch> getAllMatches() {
+        return matchRepository.findAll();
+    }
+
+    @Override
+    public void rescheduleMatch(UUID matchId, OffsetDateTime newStartTime) {
+        TournamentMatch match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new EntityNotFoundException("Match with id: " + matchId + " not found!"));
+
+        TournamentSchedule schedule = match.getSchedule();
+
+        if (schedule.getStatus() != ScheduleStatus.SCHEDULED) {
+            throw new InvalidTournamentTimeException("You can change time only SCHEDULED matches");
+        }
+
+        schedule.setScheduledStartTime(newStartTime);
         matchRepository.save(match);
     }
 
