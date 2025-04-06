@@ -35,6 +35,7 @@ public class MatchEndConsumer implements KafkaConsumer<MatchEndEvent> {
 
         try {
             matchService.updateMatchResults(currMatch, event);
+            ack.acknowledge();
         } catch (Exception e) {
             throw new KafkaConsumerException(e);
 

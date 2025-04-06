@@ -31,9 +31,12 @@ public class MatchStartConsumer implements KafkaConsumer<MatchStartEvent> {
 
         try {
             assert currMatch != null;
-            currMatch.getSchedule().setStatus(ScheduleStatus.IN_PROGRESS);
-            currMatch.getSchedule().setActualStartTime(event.getStartTime());
-            matchRepository.save(currMatch);
+            if(currMatch.getSchedule().getActualStartTime() == null){
+                currMatch.getSchedule().setStatus(ScheduleStatus.IN_PROGRESS);
+                currMatch.getSchedule().setActualStartTime(event.getStartTime());
+                matchRepository.save(currMatch);
+            }
+            ack.acknowledge();
         } catch (Exception e) {
             throw new KafkaConsumerException(e);
 
