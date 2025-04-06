@@ -18,8 +18,6 @@ public class TournamentStageCreateDto {
     private int stageOrder;
     @NotBlank
     private String stageType;
-    @Min(0)
-    private int currentRound;
     @NotBlank
     private String finalMatchFormat;
     @NotBlank

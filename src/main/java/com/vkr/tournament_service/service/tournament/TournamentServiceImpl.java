@@ -3,15 +3,15 @@ package com.vkr.tournament_service.service.tournament;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
-import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
+import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.exception.WrongTournamentStatusException;
 import com.vkr.tournament_service.mapper.tournament.TournamentMapper;
-import com.vkr.tournament_service.mapper.tournamentStage.TournamentStageMapper;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
+import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
 import com.vkr.tournament_service.validator.tournament.TournamentValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +33,7 @@ public class TournamentServiceImpl implements TournamentService {
     private final TournamentRepository tournamentRepository;
     private final TournamentMapper tournamentMapper;
     private final TournamentValidator tournamentValidator;
+    private final SingleEliminationService singleEliminationService;
 
     @Override
     public TournamentDto getTournamentByName(String tournamentName) {
@@ -54,6 +55,7 @@ public class TournamentServiceImpl implements TournamentService {
         tournament.setTournamentStatus(TournamentStatus.NOT_STARTED);
         tournament.setCurrentStageOrder(0);
 
+
         List<TournamentStage> stages = IntStream.range(0, tournamentCreateDto.getStages().size())
                 .mapToObj(i -> {
                     String stageName = tournamentCreateDto.getStages().get(i).getStageType();
@@ -61,7 +63,6 @@ public class TournamentServiceImpl implements TournamentService {
                             .tournament(tournament)
                             .stageOrder(i + 1)
                             .stageType(Stage.fromName(stageName))
-                            .currentRound(0)
                             .finalMatchFormat(tournamentCreateDto.getStages().get(i).getFinalMatchFormat())
                             .matchFormat(tournamentCreateDto.getStages().get(i).getMatchFormat())
                             .matchForTheThirdPlace(tournamentCreateDto.getStages().get(i).isMatchForTheThirdPlace())
@@ -140,6 +141,7 @@ public class TournamentServiceImpl implements TournamentService {
                     "or has already passed");
         }
         currentTournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
+        singleEliminationService.createSingleEliminationStage(UUID.fromString(tournamentId), 0);
         tournamentRepository.save(currentTournament);
         return tournamentMapper.toDto(currentTournament);
     }

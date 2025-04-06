@@ -6,10 +6,11 @@ import com.vkr.tournament_service.entity.schedule.TournamentSchedule;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
+import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.repository.match.MatchRepository;
 import com.vkr.tournament_service.repository.team.TeamRepository;
+import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.repository.tournamentStage.TournamentStageRepository;
-import com.vkr.tournament_service.service.tournament.TournamentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +22,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class SingleEliminationService {
 
-    private final TournamentService tournamentService;
+    private final TournamentRepository tournamentRepository;
     private final TournamentStageRepository stageRepository;
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
 
     public void createSingleEliminationStage(UUID tournamentId, int stageOrder) {
-        Tournament tournament = tournamentService.getTournamentById(tournamentId);
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new EntityNotFoundException("Tournament with id: " + tournamentId + " not found!"));
 
         List<TournamentTeam> teams = teamRepository.findAllByTournamentId(tournamentId);
         if (teams.size() < 2) {
@@ -46,8 +48,10 @@ public class SingleEliminationService {
         int totalRounds = (int) Math.ceil(Math.log(totalTeams) / Math.log(2));
 
         TournamentStage stage = stageRepository.findAllByTournamentId(tournamentId).get(stageOrder);
+        if (teams.size() < 4 && stage.isMatchForTheThirdPlace()) {
+            stage.setMatchForTheThirdPlace(false);
+        }
         stage.setTotalRounds(totalRounds);
-        stage.setCurrentRound(1);
         stageRepository.save(stage);
 
         List<TournamentMatch> matches = new ArrayList<>();
@@ -284,7 +288,7 @@ public class SingleEliminationService {
         TournamentStage stage = match.getStage();
         int matchNumber = match.getMatchNumber();
         int round = match.getRound();
-        int totalTeams = Math.toIntExact(stage.getTournament().getTeamsCount());
+        int totalTeams = nextPowerOfTwo(Math.toIntExact(stage.getTournament().getTeamsCount()));
 
         if (round == stage.getTotalRounds()) {
             return;

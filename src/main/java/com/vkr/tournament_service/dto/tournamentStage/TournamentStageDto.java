@@ -20,7 +20,6 @@ public class TournamentStageDto {
     private UUID tournamentId;
     private int stageOrder;
     private String stageType;
-    private int currentRound;
     private int totalRounds;
     private String finalMatchFormat;
     private String matchFormat;

@@ -34,9 +34,6 @@ public class TournamentStage {
     @Enumerated(EnumType.STRING)
     private Stage stageType;
 
-    @Column(name = "current_round", nullable = false)
-    private int currentRound;
-
     @Column(name = "total_rounds", nullable = false)
     private int totalRounds;
 

@@ -16,6 +16,4 @@ public class TournamentStageUpdateDto {
     @Min(1)
     private Integer stageOrder;
     private String stageType;
-    @Min(0)
-    private Integer currentRound;
 }
