@@ -1,0 +1,39 @@
+name: Matchmaking Service Docker CICD
+
+on:
+  push:
+    branches:
+      - cicd
+  pull_request:
+    branches:
+      - cicd
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Remove previous Docker images
+        run: docker rmi -f $(docker images -q vkr-tournament-service) || true
+
+      - name: Build Docker Image
+        run: docker build --rm -t vkr-tournament-service:latest .
+
+      - name: Stop and Remove Old Container
+        run: |
+          docker stop vkr-tournament-service || true
+          docker rm vkr-tournament-service || true
+
+      - name: Run Docker Container
+        run: |
+          docker run --name vkr-tournament-service -d -p 8082:8082 \
+            -e CONFIG_HOST=${{ secrets.CONFIG_HOST }} \
+            -e CONFIG_GITHUB_LABEL=${{ secrets.CONFIG_GITHUB_LABEL }} \
+            -e EUREKA_HOST=${{ secrets.EUREKA_HOST }} \
+            vkr-tournament-service:latest
+
+      - name: Remove dangling images
+        run: docker image prune -f

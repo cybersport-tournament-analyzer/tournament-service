@@ -1,20 +1,28 @@
 spring:
   application:
-    name: tournament-service
+    name:
+      tournament-service
   cloud:
     config:
       enabled: true
       fail-fast: true
-      label: master
+      label: ${CONFIG_GITHUB_LABEL}
+      uri: http://${CONFIG_HOST}:8888/
   config:
-    import: optional:config-service:http://localhost:8888/
+    import: optional:config-service:http://${CONFIG_HOST}:8888/, optional:file:.env[.properties]
   profiles:
-      active: dev
+    active: dev
 
 eureka:
   client:
     service-url:
-      default-zone: http://localhost:8761/eureka/
+      uris: http://${EUREKA_HOST}:8761/eureka/
+      defaultZone: http://${EUREKA_HOST}:8761/eureka/
     healthcheck:
       enabled: true
     enabled: true
+  instance:
+    secure-port-enabled: false
+    non-secure-port-enabled: true
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}

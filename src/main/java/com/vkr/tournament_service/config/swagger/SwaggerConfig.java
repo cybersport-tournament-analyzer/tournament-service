@@ -14,8 +14,10 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .servers(List.of(
+                        new Server().url("http://109.172.95.212:8082")
+                                .description("Production server"),
                         new Server().url("http://localhost:8082")
-                                .description("Production server")
+                                .description("local server")
                 ));
     }
 }
