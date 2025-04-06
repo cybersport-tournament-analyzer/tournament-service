@@ -21,7 +21,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ConfigurationPropertiesScan(basePackages = "com.vkr.tournament_service.property")
 @OpenAPIDefinition(
 		info = @Info(
-				title = "Tournament Service",
+				title = "Tournament Service lol",
 				version = "1.0.0")
 )
 public class TournamentServiceApplication {
