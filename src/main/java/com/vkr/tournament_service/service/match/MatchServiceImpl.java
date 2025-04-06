@@ -1,13 +1,16 @@
 package com.vkr.tournament_service.service.match;
 
 import com.vkr.tournament_service.dto.match.MatchDto;
+import com.vkr.tournament_service.dto.team.TeamDto;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
+import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent;
 import com.vkr.tournament_service.kafka.event.matchEnd.MatchEndEvent;
 import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
 import com.vkr.tournament_service.mapper.match.MatchMapper;
+import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.match.MatchRepository;
 import com.vkr.tournament_service.service.tournament.TournamentService;
 import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
@@ -15,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -26,6 +30,7 @@ public class MatchServiceImpl implements MatchService {
     private final LobbyStartProducer lobbyStartProducer;
     private final MatchRepository matchRepository;
     private final TournamentService tournamentService;
+    private final TeamMapper teamMapper;
     private final SingleEliminationService singleEliminationService;
 
     @Override
@@ -47,13 +52,13 @@ public class MatchServiceImpl implements MatchService {
 
         TournamentMatch tournamentMatch = matchRepository.findById(matchId).orElseThrow(() -> new EntityNotFoundException("Tournament match not found"));
 
-        System.out.println(tournamentMatch.getTournament().getTournamentMode());
-        System.out.println(tournamentMatch.getTournament());
+        TeamDto team1 = teamMapper.toDto(tournamentMatch.getTeam1());
+        TeamDto team2 = teamMapper.toDto(tournamentMatch.getTeam2());
 
         lobbyStartProducer.produce(new LobbyStartEvent(tournamentMatch.getId(),
                 tournamentService.getTournamentById(tournamentId).getTournamentMode(),
                 tournamentMatch.getMatchFormat(),
-                tournamentMatch.getSchedule().getScheduledStartTime().toLocalDateTime())
+                tournamentMatch.getSchedule().getScheduledStartTime().toLocalDateTime(), team1, team2)
         );
 
         log.info("Tournament match started");
