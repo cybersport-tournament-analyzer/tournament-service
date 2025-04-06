@@ -85,8 +85,16 @@ public class SingleEliminationService {
         OffsetDateTime matchTime = startTime; // Время начала раунда
 
         for (int i = 0; i < teams.size() / 2; i++) {
-            TournamentTeam team1 = teams.get(i);
-            TournamentTeam team2 = teams.get(teams.size() - 1 - i);
+            TournamentTeam team1;
+            TournamentTeam team2;
+
+            if (round == 1) {
+                team1 = teams.get(i);
+                team2 = teams.get(teams.size() - 1 - i);
+            } else {
+                team1 = teams.get(i * 2);
+                team2 = teams.get(i * 2 + 1);
+            }
 
             int matchNumber = matchCounter.getAndIncrement(); // Уникальный номер матча
             boolean isFinal = round == stage.getTotalRounds();
@@ -176,7 +184,7 @@ public class SingleEliminationService {
         return power;
     }
 
-    private int getMaxScore(String matchFormat){
+    private int getMaxScore(String matchFormat) {
         return switch (matchFormat) {
             case "bo3" -> 2;
             case "bo5" -> 3;
