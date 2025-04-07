@@ -11,8 +11,10 @@ import java.util.UUID;
 public interface MatchService {
 
     void updateMatchResults(TournamentMatch match, MatchEndEvent event);
+
     List<TournamentMatch> getAllMatches();
-    void rescheduleMatch(UUID matchId, OffsetDateTime newStartTime);
+
+    MatchDto rescheduleMatch(UUID matchId, OffsetDateTime newStartTime, String userId);
 
     MatchDto startTournamentMatch(UUID matchId, UUID tournamentId);
 }

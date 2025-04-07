@@ -7,6 +7,7 @@ import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
 import com.vkr.tournament_service.entity.schedule.TournamentSchedule;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.exception.InvalidTournamentTimeException;
+import com.vkr.tournament_service.exception.ValidationException;
 import com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent;
 import com.vkr.tournament_service.kafka.event.matchEnd.MatchEndEvent;
 import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
@@ -53,9 +54,13 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public void rescheduleMatch(UUID matchId, OffsetDateTime newStartTime) {
+    public MatchDto rescheduleMatch(UUID matchId, OffsetDateTime newStartTime, String userId) {
         TournamentMatch match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new EntityNotFoundException("Match with id: " + matchId + " not found!"));
+
+        if (!userId.equals(match.getTournament().getCreatorId())) {
+            throw new ValidationException("User with id=" + userId + " has no access to tournament with name=" + match.getTournament().getTournamentName());
+        }
 
         TournamentSchedule schedule = match.getSchedule();
 
@@ -63,8 +68,10 @@ public class MatchServiceImpl implements MatchService {
             throw new InvalidTournamentTimeException("You can change time only SCHEDULED matches");
         }
 
+        singleEliminationService.findParentMatches(match);
+
         schedule.setScheduledStartTime(newStartTime);
-        matchRepository.save(match);
+        return matchMapper.toDto(matchRepository.save(match));
     }
 
     @Override

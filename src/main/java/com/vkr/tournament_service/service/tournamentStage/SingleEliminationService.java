@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +46,9 @@ public class SingleEliminationService {
         teamRepository.saveAll(teams);
 
         int totalTeams = teams.size();
+        tournament.setTeamsCount((long) totalTeams);
+        tournamentRepository.save(tournament);
+
         int totalRounds = (int) Math.ceil(Math.log(totalTeams) / Math.log(2));
 
         TournamentStage stage = stageRepository.findAllByTournamentId(tournamentId).get(stageOrder);
@@ -128,11 +132,27 @@ public class SingleEliminationService {
             roundMatches.add(match);
             matchMap.put(matchNumber, match);
 
-            int parentMatch1 = matchNumber - totalTeams / (int) Math.pow(2, round);
-            int parentMatch2 = matchNumber - totalTeams / (int) Math.pow(2, round) + 1;
+            TournamentMatch prevMatch1;
+            TournamentMatch prevMatch2;
 
-            TournamentMatch prevMatch1 = matchMap.get(parentMatch1);
-            TournamentMatch prevMatch2 = matchMap.get(parentMatch2);
+            if (round <= 1) {
+                prevMatch1 = null;
+                prevMatch2 = null;
+            } else {
+                int sumPreviousRounds = totalTeams - (totalTeams / (int) Math.pow(2, round - 1));
+                int firstMatchInCurrentRound = sumPreviousRounds + 1;
+
+                int sumPreviousPreviousRounds = totalTeams - (totalTeams / (int) Math.pow(2, round - 2));
+                int firstMatchInPreviousRound = sumPreviousPreviousRounds + 1;
+
+                int parentPairIndex = matchNumber - firstMatchInCurrentRound;
+                int firstParentMatchNumber = parentPairIndex * 2 + firstMatchInPreviousRound;
+                int secondParentMatchNumber = firstParentMatchNumber + 1;
+
+                prevMatch1 = matchMap.get(firstParentMatchNumber);
+                prevMatch2 = matchMap.get(secondParentMatchNumber);
+            }
+
 
             boolean parent1Done = prevMatch1 == null || prevMatch1.getSchedule().getStatus() == ScheduleStatus.COMPLETED;
             boolean parent2Done = prevMatch2 == null || prevMatch2.getSchedule().getStatus() == ScheduleStatus.COMPLETED;
@@ -326,5 +346,38 @@ public class SingleEliminationService {
             matchRepository.save(thirdPlaceMatch);
         }
     }
+
+    public List<TournamentMatch> findParentMatches(TournamentMatch match) {
+        int round = match.getRound();
+        TournamentStage stage = match.getStage();
+        int matchNumber = match.getMatchNumber();
+
+        if (round <= 1) return Collections.emptyList(); // Первый раунд — родителей нет
+
+        int totalTeams = nextPowerOfTwo(Math.toIntExact(stage.getTournament().getTeamsCount()));
+        int parentRound = round - 1;
+
+        if (matchNumber == totalTeams) { // Проверка если это матч за 3-е место
+            matchNumber -= 1;
+        }
+
+        int sumPreviousRounds = totalTeams - (totalTeams / (int) Math.pow(2, round - 1));
+        int firstMatchInCurrentRound = sumPreviousRounds + 1;
+
+        int sumPreviousPreviousRounds = totalTeams - (totalTeams / (int) Math.pow(2, round - 2));
+        int firstMatchInPreviousRound = sumPreviousPreviousRounds + 1;
+
+        int parentPairIndex = matchNumber - firstMatchInCurrentRound;
+        int firstParentMatchNumber = parentPairIndex * 2 + firstMatchInPreviousRound;
+        int secondParentMatchNumber = firstParentMatchNumber + 1;
+
+        TournamentMatch parent1 = matchRepository.findByStageAndRoundAndMatchNumber(stage, parentRound, firstParentMatchNumber);
+        TournamentMatch parent2 = matchRepository.findByStageAndRoundAndMatchNumber(stage, parentRound, secondParentMatchNumber);
+
+
+        return Stream.of(parent1, parent2).filter(Objects::nonNull).toList();
+    }
+
+
 }
 

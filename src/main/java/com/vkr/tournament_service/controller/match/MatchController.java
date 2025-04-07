@@ -1,11 +1,11 @@
 package com.vkr.tournament_service.controller.match;
 
+import com.vkr.tournament_service.dto.match.MatchDto;
 import com.vkr.tournament_service.dto.match.MatchRescheduleDto;
 import com.vkr.tournament_service.service.match.MatchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @RestController
@@ -21,7 +21,7 @@ public class MatchController {
     }
 
     @PatchMapping("/{matchId}/rescheduleMatch")
-    public void rescheduleMatch(@PathVariable String matchId, @RequestBody MatchRescheduleDto dto) {
-        matchService.rescheduleMatch(UUID.fromString(matchId), dto.getNewStartTime());
+    public MatchDto rescheduleMatch(@PathVariable String matchId, @RequestBody MatchRescheduleDto dto) {
+        return matchService.rescheduleMatch(UUID.fromString(matchId), dto.getNewStartTime(), dto.getUserId());
     }
 }
