@@ -1,5 +1,6 @@
 package com.vkr.tournament_service.controller.tournament;
 
+import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
@@ -53,6 +54,13 @@ public class TournamentController {
     @Operation(summary = "Get tournament bracket by id")
     public List<List<List<Map<String, Object>>>> getTournamentBracketById(@PathVariable String tournamentId) {
         return singleEliminationService.getBracket(UUID.fromString(tournamentId));
+    }
+
+    @GetMapping("/{tournamentId}/standings")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get tournament standings by id")
+    public List<TeamStandingsDto> getTournamentStandingsById(@PathVariable String tournamentId) {
+        return singleEliminationService.calculateFinalStandings(UUID.fromString(tournamentId));
     }
 
     @PostMapping

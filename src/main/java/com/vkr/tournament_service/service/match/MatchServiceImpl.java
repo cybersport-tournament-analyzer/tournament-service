@@ -7,6 +7,7 @@ import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
 import com.vkr.tournament_service.entity.schedule.TournamentSchedule;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.exception.InvalidTournamentTimeException;
+import com.vkr.tournament_service.exception.ValidationException;
 import com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent;
 import com.vkr.tournament_service.kafka.event.matchEnd.MatchEndEvent;
 import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -53,9 +55,13 @@ public class MatchServiceImpl implements MatchService {
     }
 
     @Override
-    public void rescheduleMatch(UUID matchId, OffsetDateTime newStartTime) {
+    public MatchDto rescheduleMatch(UUID matchId, OffsetDateTime newStartTime, String userId) {
         TournamentMatch match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new EntityNotFoundException("Match with id: " + matchId + " not found!"));
+
+        if (!userId.equals(match.getTournament().getCreatorId())) {
+            throw new ValidationException("User with id=" + userId + " has no access to tournament with name=" + match.getTournament().getTournamentName());
+        }
 
         TournamentSchedule schedule = match.getSchedule();
 
@@ -63,8 +69,39 @@ public class MatchServiceImpl implements MatchService {
             throw new InvalidTournamentTimeException("You can change time only SCHEDULED matches");
         }
 
+        List<TournamentMatch> parentMatches = singleEliminationService.findParentMatches(match);
+        List<TournamentMatch> childMatches = singleEliminationService.findChildMatches(match);
+
+        OffsetDateTime now = OffsetDateTime.now();
+        if (newStartTime.isBefore(now)) {
+            throw new InvalidTournamentTimeException("New start time must be in the future");
+        }
+
+        Duration buffer = getBufferForFormat(match.getMatchFormat());
+
+        for (TournamentMatch parent : parentMatches) {
+            TournamentSchedule parentSchedule = parent.getSchedule();
+            // Используем фактическое время начала, если оно установлено, иначе запланированное
+            OffsetDateTime parentStart = parentSchedule.getActualStartTime() != null
+                    ? parentSchedule.getActualStartTime()
+                    : parentSchedule.getScheduledStartTime();
+            if (newStartTime.isBefore(parentStart.plus(buffer))) {
+                throw new InvalidTournamentTimeException("New start time must be after parent's start time plus "
+                        + buffer.toHours() + " hour(s)");
+            }
+        }
+
+        for (TournamentMatch child : childMatches) {
+            TournamentSchedule childSchedule = child.getSchedule();
+            OffsetDateTime childStart = childSchedule.getScheduledStartTime();
+            if (childStart != null && newStartTime.plus(buffer).isAfter(childStart)) {
+                throw new InvalidTournamentTimeException("New start time plus " + buffer.toHours()
+                        + " hour(s) must be before child's scheduled start time");
+            }
+        }
+
         schedule.setScheduledStartTime(newStartTime);
-        matchRepository.save(match);
+        return matchMapper.toDto(matchRepository.save(match));
     }
 
     @Override
@@ -92,5 +129,16 @@ public class MatchServiceImpl implements MatchService {
         return match.getTeam1Score() >= requiredWins || match.getTeam2Score() >= requiredWins;
     }
 
+    private Duration getBufferForFormat(String matchFormat) {
+        if (matchFormat == null) {
+            return Duration.ofHours(1); // дефолтно 1 час
+        }
+        String format = matchFormat.toLowerCase();
+        return switch (format) {
+            case "bo3" -> Duration.ofHours(3);
+            case "bo5" -> Duration.ofHours(5);
+            default -> Duration.ofHours(1);
+        };
+    }
 
 }
