@@ -60,7 +60,7 @@ public class TournamentController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Get tournament standings by id")
     public List<TeamStandingsDto> getTournamentStandingsById(@PathVariable String tournamentId) {
-        return singleEliminationService.calculateFinalStandings(UUID.fromString(tournamentId));
+        return singleEliminationService.getCurrentStandings(UUID.fromString(tournamentId));
     }
 
     @PostMapping

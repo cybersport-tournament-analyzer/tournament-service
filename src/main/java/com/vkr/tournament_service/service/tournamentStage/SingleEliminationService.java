@@ -1,6 +1,5 @@
 package com.vkr.tournament_service.service.tournamentStage;
 
-import com.vkr.tournament_service.dto.team.TeamDto;
 import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
@@ -267,6 +266,11 @@ public class SingleEliminationService {
         return match.getTeam1().getTeamName().equals(match.getWinnerTeamName()) ? match.getTeam2() : match.getTeam1();
     }
 
+    private TournamentTeam getWinner(TournamentMatch match) {
+        if (match.getWinnerTeamName() == null) return null;
+        return match.getTeam1().getTeamName().equals(match.getWinnerTeamName()) ? match.getTeam1() : match.getTeam2();
+    }
+
 
     public List<List<List<Map<String, Object>>>> getBracket(UUID tournamentId) {
         List<TournamentMatch> matches = matchRepository.findAllByTournamentIdOrderByRoundAsc(tournamentId);
@@ -429,101 +433,37 @@ public class SingleEliminationService {
     }
 
     @Transactional
-    public List<TeamStandingsDto> calculateFinalStandings(UUID tournamentId) {
-        List<TournamentTeam> teams = teamRepository.findAllByTournamentId(tournamentId);
-        if (teams.isEmpty()) {
-            throw new EntityNotFoundException("No teams found for tournament " + tournamentId);
-        }
-
+    public List<TeamStandingsDto> getCurrentStandings(UUID tournamentId) {
         List<TournamentMatch> matches = matchRepository.findAllByTournamentIdOrderByRoundAsc(tournamentId);
+        TournamentStage stage = Objects.requireNonNull(tournamentRepository.findById(tournamentId).orElse(null)).getStages().get(0);
 
-        int totalTeams = nextPowerOfTwo(teams.size());
-        int totalRounds = (int) (Math.log(totalTeams) / Math.log(2));
-
-        Map<UUID, Integer> bestRoundMap = new HashMap<>();
-        for (TournamentTeam team : teams) {
-            bestRoundMap.put(team.getId(), 0);
-        }
-
-        for (TournamentMatch m : matches) {
-            if (m.getSchedule() != null
-                    && m.getSchedule().getStatus() == ScheduleStatus.COMPLETED
-                    && m.getWinnerTeamName() != null) {
-
-                if (m.getTeam1() != null) {
-                    bestRoundMap.put(m.getTeam1().getId(),
-                            Math.max(bestRoundMap.get(m.getTeam1().getId()), m.getRound()));
-                }
-                if (m.getTeam2() != null) {
-                    bestRoundMap.put(m.getTeam2().getId(),
-                            Math.max(bestRoundMap.get(m.getTeam2().getId()), m.getRound()));
-                }
-
-                if (m.getRound() == totalRounds && m.getWinnerTeamName() != null) {
-                    TournamentTeam winner = null;
-                    if (m.getTeam1() != null && m.getTeam1().getTeamName().equals(m.getWinnerTeamName())) {
-                        winner = m.getTeam1();
-                    } else if (m.getTeam2() != null && m.getTeam2().getTeamName().equals(m.getWinnerTeamName())) {
-                        winner = m.getTeam2();
-                    }
-                    if (winner != null) {
-                        bestRoundMap.put(winner.getId(), totalRounds + 1);
-                    }
-                }
-            }
-        }
-
-        Optional<TournamentMatch> thirdPlaceMatchOpt =
-                matches.stream().filter(m -> m.getRound() == totalRounds && m.getMatchNumber() > totalTeams - 1)
-                        .findFirst();
-        if (thirdPlaceMatchOpt.isPresent()) {
-            TournamentMatch thirdPlaceMatch = thirdPlaceMatchOpt.get();
-            if (thirdPlaceMatch.getSchedule() != null
-                    && thirdPlaceMatch.getSchedule().getStatus() == ScheduleStatus.COMPLETED
-                    && thirdPlaceMatch.getWinnerTeamName() != null) {
-                TournamentTeam thirdTeam = null;
-                TournamentTeam fourthTeam = null;
-                if (thirdPlaceMatch.getTeam1() != null
-                        && thirdPlaceMatch.getTeam1().getTeamName().equals(thirdPlaceMatch.getWinnerTeamName())) {
-                    thirdTeam = thirdPlaceMatch.getTeam1();
-                    fourthTeam = thirdPlaceMatch.getTeam2();
-                } else if (thirdPlaceMatch.getTeam2() != null
-                        && thirdPlaceMatch.getTeam2().getTeamName().equals(thirdPlaceMatch.getWinnerTeamName())) {
-                    thirdTeam = thirdPlaceMatch.getTeam2();
-                    fourthTeam = thirdPlaceMatch.getTeam1();
-                }
-                if (thirdTeam != null) {
-                    bestRoundMap.put(thirdTeam.getId(), totalRounds);
-                }
-                if (fourthTeam != null) {
-                    bestRoundMap.put(fourthTeam.getId(), totalRounds - 1);
-                }
-            }
-        }
-
-        Map<Integer, List<TournamentTeam>> roundToTeams = new TreeMap<>(Comparator.reverseOrder());
-        for (TournamentTeam team : teams) {
-            int round = bestRoundMap.getOrDefault(team.getId(), 0);
-            roundToTeams.computeIfAbsent(round, r -> new ArrayList<>()).add(team);
-        }
-
+        int totalTeams = nextPowerOfTwo(Math.toIntExact(stage.getTournament().getTeamsCount()));
         List<TeamStandingsDto> standings = new ArrayList<>();
-        int place = 1;
-        for (Map.Entry<Integer, List<TournamentTeam>> entry : roundToTeams.entrySet()) {
-            List<TournamentTeam> sameRoundTeams = entry.getValue();
-            sameRoundTeams.sort(Comparator.comparingInt(TournamentTeam::getSeed));
-            for (TournamentTeam team : sameRoundTeams) {
-                TeamDto teamDto = teamMapper.toDto(team);
-                standings.add(TeamStandingsDto.builder()
-                        .teamDto(teamDto)
-                        .place(place++)
-                        .build());
+        for (TournamentMatch match : matches) {
+            if (match.getSchedule().getStatus().equals(ScheduleStatus.COMPLETED) && getLoser(match) != null) {
+                if (match.getRound() == stage.getTotalRounds() && match.getMatchNumber() == totalTeams - 1) {
+                    TeamStandingsDto secondPlace = TeamStandingsDto.builder().
+                            teamDto(teamMapper.toDto(getLoser(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                    standings.add(secondPlace);
+                    TeamStandingsDto winner = TeamStandingsDto.builder().
+                            teamDto(teamMapper.toDto(getWinner(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                    standings.add(winner);
+                } else if (match.getRound() == stage.getTotalRounds() && stage.isMatchForTheThirdPlace() && match.getMatchNumber() == totalTeams) {
+                    TeamStandingsDto fourthPlace = TeamStandingsDto.builder().
+                            teamDto(teamMapper.toDto(getLoser(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                    standings.add(fourthPlace);
+                    TeamStandingsDto thirdPlace = TeamStandingsDto.builder().
+                            teamDto(teamMapper.toDto(getWinner(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                    standings.add(thirdPlace);
+                } else if (match.getRound() == stage.getTotalRounds() - 1 && stage.isMatchForTheThirdPlace()) {
+                } else {
+                    TeamStandingsDto teamStandingsDto = TeamStandingsDto.builder().
+                            teamDto(teamMapper.toDto(getLoser(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                    standings.add(teamStandingsDto);
+                }
             }
         }
-
         return standings;
     }
-
-
 }
 
