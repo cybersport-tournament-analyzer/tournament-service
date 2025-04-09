@@ -87,10 +87,17 @@ public class SingleEliminationService {
 
         if (round == 1) {
             int missingTeams = totalTeams - teams.size();
-            // Добавляем `null` вместо byeTeam
             for (int i = 0; i < missingTeams; i++) {
                 teams.add(null);
             }
+
+            // Генерируем олимпийский посев
+            List<Integer> seedOrder = generateSeedOrder(totalTeams);
+            List<TournamentTeam> orderedTeams = new ArrayList<>();
+            for (int seed : seedOrder) {
+                orderedTeams.add(teams.get(seed - 1));
+            }
+            teams = orderedTeams;
         }
 
         List<TournamentMatch> roundMatches = new ArrayList<>();
@@ -102,13 +109,8 @@ public class SingleEliminationService {
             TournamentTeam team1;
             TournamentTeam team2;
 
-            if (round == 1) {
-                team1 = teams.get(i);
-                team2 = teams.get(teams.size() - 1 - i);
-            } else {
-                team1 = teams.get(i * 2);
-                team2 = teams.get(i * 2 + 1);
-            }
+            team1 = teams.get(i * 2);
+            team2 = teams.get(i * 2 + 1);
 
             int matchNumber = matchCounter.getAndIncrement(); // Уникальный номер матча
             boolean isFinal = round == stage.getTotalRounds();
@@ -203,6 +205,21 @@ public class SingleEliminationService {
         // Запускаем следующий раунд через 1 день после последнего матча
         OffsetDateTime nextRoundStartTime = matchTime.plusDays(1);
         generateBracket(matches, nextRoundTeams, stage, tournament, round + 1, nextRoundStartTime, matchCounter, matchMap);
+    }
+
+    private List<Integer> generateSeedOrder(int size) {
+        List<Integer> seeds = new ArrayList<>();
+        seeds.add(1);
+        while (seeds.size() < size) {
+            List<Integer> next = new ArrayList<>();
+            int max = seeds.size() * 2 + 1;
+            for (Integer seed : seeds) {
+                next.add(seed);
+                next.add(max - seed);
+            }
+            seeds = next;
+        }
+        return seeds;
     }
 
 
