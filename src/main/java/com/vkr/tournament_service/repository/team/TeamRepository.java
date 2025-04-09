@@ -12,6 +12,7 @@ public interface TeamRepository extends JpaRepository<TournamentTeam, UUID> {
     TournamentTeam findByTeamName(String teamName);
 
     List<TournamentTeam> findAllByTournamentId(UUID tournamentId);
+    List<TournamentTeam> findByTournamentIdAndTeamNameIn(UUID tournamentId, List<String> teamNames);
 
     TournamentTeam findByTeamNameAndTournamentId(String teamName, UUID tournamentId);
 }

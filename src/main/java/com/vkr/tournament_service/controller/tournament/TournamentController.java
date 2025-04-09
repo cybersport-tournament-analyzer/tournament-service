@@ -4,6 +4,7 @@ import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
+import com.vkr.tournament_service.dto.tournamentStage.UpdateSingleEliminationBracketDto;
 import com.vkr.tournament_service.mapper.tournament.TournamentMapper;
 import com.vkr.tournament_service.service.tournament.TournamentService;
 import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
@@ -89,6 +90,13 @@ public class TournamentController {
     @Operation(summary = "Stop tournament registration")
     public TournamentDto stopTournamentRegistration(@PathVariable String tournamentId, @RequestParam String userId) {
         return tournamentService.stopTournamentRegistration(tournamentId, userId);
+    }
+
+    @PatchMapping("/updateBracket/{tournamentId}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Update tournament bracket")
+    public List<List<List<Map<String, Object>>>> updateTournamentBracket(@PathVariable String tournamentId, UpdateSingleEliminationBracketDto dto, @RequestParam String userId) {
+        return singleEliminationService.updateBracket(dto.getBracket(), tournamentId, userId);
     }
 
     @DeleteMapping("/{tournamentId}")

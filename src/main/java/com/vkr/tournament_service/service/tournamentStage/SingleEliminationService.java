@@ -13,6 +13,7 @@ import com.vkr.tournament_service.repository.match.MatchRepository;
 import com.vkr.tournament_service.repository.team.TeamRepository;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.repository.tournamentStage.TournamentStageRepository;
+import com.vkr.tournament_service.validator.tournament.TournamentValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.util.stream.Stream;
 public class SingleEliminationService {
 
     private final TournamentRepository tournamentRepository;
+    private final TournamentValidator tournamentValidator;
     private final TournamentStageRepository stageRepository;
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
@@ -66,7 +68,7 @@ public class SingleEliminationService {
         AtomicInteger matchCounter = new AtomicInteger(1);
         Map<Integer, TournamentMatch> matchMap = new HashMap<>();
 
-        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), matchCounter, matchMap);
+        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), matchCounter, matchMap, false);
 
         // Добавляем матч за 3-е место, если включен
         if (stage.isMatchForTheThirdPlace()) {
@@ -79,13 +81,13 @@ public class SingleEliminationService {
 
 
     private void generateBracket(List<TournamentMatch> matches, List<TournamentTeam> teams, TournamentStage stage, Tournament tournament, int round,
-                                 OffsetDateTime startTime, AtomicInteger matchCounter, Map<Integer, TournamentMatch> matchMap) {
+                                 OffsetDateTime startTime, AtomicInteger matchCounter, Map<Integer, TournamentMatch> matchMap, boolean change) {
         if (teams.size() < 2) return;
 
         // Определяем ближайшую степень двойки
         int totalTeams = nextPowerOfTwo(Math.toIntExact(tournament.getTeamsCount()));
 
-        if (round == 1) {
+        if (round == 1 && !change) {
             int missingTeams = totalTeams - teams.size();
             for (int i = 0; i < missingTeams; i++) {
                 teams.add(null);
@@ -204,7 +206,7 @@ public class SingleEliminationService {
 
         // Запускаем следующий раунд через 1 день после последнего матча
         OffsetDateTime nextRoundStartTime = matchTime.plusDays(1);
-        generateBracket(matches, nextRoundTeams, stage, tournament, round + 1, nextRoundStartTime, matchCounter, matchMap);
+        generateBracket(matches, nextRoundTeams, stage, tournament, round + 1, nextRoundStartTime, matchCounter, matchMap, change);
     }
 
     private List<Integer> generateSeedOrder(int size) {
@@ -460,17 +462,17 @@ public class SingleEliminationService {
             if (match.getSchedule().getStatus().equals(ScheduleStatus.COMPLETED) && getLoser(match) != null) {
                 if (match.getRound() == stage.getTotalRounds() && match.getMatchNumber() == totalTeams - 1) {
                     TeamStandingsDto secondPlace = TeamStandingsDto.builder().
-                            teamDto(teamMapper.toDto(getLoser(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                            teamDto(teamMapper.toDto(getLoser(match))).place(2).build();
                     standings.add(secondPlace);
                     TeamStandingsDto winner = TeamStandingsDto.builder().
-                            teamDto(teamMapper.toDto(getWinner(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                            teamDto(teamMapper.toDto(getWinner(match))).place(1).build();
                     standings.add(winner);
                 } else if (match.getRound() == stage.getTotalRounds() && stage.isMatchForTheThirdPlace() && match.getMatchNumber() == totalTeams) {
                     TeamStandingsDto fourthPlace = TeamStandingsDto.builder().
-                            teamDto(teamMapper.toDto(getLoser(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                            teamDto(teamMapper.toDto(getLoser(match))).place(4).build();
                     standings.add(fourthPlace);
                     TeamStandingsDto thirdPlace = TeamStandingsDto.builder().
-                            teamDto(teamMapper.toDto(getWinner(match))).place((int) (totalTeams / Math.pow(2, match.getRound()) + 1)).build();
+                            teamDto(teamMapper.toDto(getWinner(match))).place(3).build();
                     standings.add(thirdPlace);
                 } else if (match.getRound() == stage.getTotalRounds() - 1 && stage.isMatchForTheThirdPlace()) {
                 } else {
@@ -481,6 +483,34 @@ public class SingleEliminationService {
             }
         }
         return standings;
+    }
+
+    @Transactional
+    public List<List<List<Map<String, Object>>>> updateBracket(List<List<List<Map<String, Object>>>> bracket, String tournamentId, String userId) {
+        Tournament tournament = tournamentRepository.findById(UUID.fromString(tournamentId))
+                .orElseThrow(() -> new EntityNotFoundException("Tournament with id: " + tournamentId + " not found!"));
+        TournamentStage stage = stageRepository.findAllByTournamentId(UUID.fromString(tournamentId)).get(0);
+        tournamentValidator.validateAccess(UUID.fromString(tournamentId), userId);
+        List<String> teamNames = new ArrayList<>();
+        List<Map<String, Object>> firstRound = bracket.get(0).get(0);
+        for (Map<String, Object> match : firstRound) {
+            teamNames.add((String) match.get("name"));
+        }
+        List<TournamentTeam> teams = teamRepository.findByTournamentIdAndTeamNameIn(UUID.fromString(tournamentId), teamNames);
+
+        List<TournamentMatch> matches = new ArrayList<>();
+        AtomicInteger matchCounter = new AtomicInteger(1);
+        Map<Integer, TournamentMatch> matchMap = new HashMap<>();
+
+        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), matchCounter, matchMap, true);
+        if (stage.isMatchForTheThirdPlace()) {
+            generateThirdPlaceMatch(matches, stage, tournament, matchCounter, matchMap);
+        }
+
+        stage.setMatches(matches);
+        stageRepository.save(stage);
+
+        return getBracket(UUID.fromString(tournamentId));
     }
 }
 
