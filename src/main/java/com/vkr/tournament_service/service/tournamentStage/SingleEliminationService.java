@@ -490,14 +490,19 @@ public class SingleEliminationService {
         Tournament tournament = tournamentRepository.findById(UUID.fromString(tournamentId))
                 .orElseThrow(() -> new EntityNotFoundException("Tournament with id: " + tournamentId + " not found!"));
         TournamentStage stage = stageRepository.findAllByTournamentId(UUID.fromString(tournamentId)).get(0);
+        matchRepository.deleteAll(stage.getMatches());
         tournamentValidator.validateAccess(UUID.fromString(tournamentId), userId);
         List<String> teamNames = new ArrayList<>();
-        List<Map<String, Object>> firstRound = bracket.get(0).get(0);
-        for (Map<String, Object> match : firstRound) {
-            teamNames.add((String) match.get("name"));
+        List<List<Map<String, Object>>> firstRound = bracket.get(0);
+        for (List<Map<String, Object>> match : firstRound) {
+            for (Map<String, Object> team : match) {
+                String name = (String) team.get("name");
+                if (name != null)
+                    teamNames.add(name);
+            }
         }
         List<TournamentTeam> teams = teamRepository.findByTournamentIdAndTeamNameIn(UUID.fromString(tournamentId), teamNames);
-
+        teams.forEach(t -> System.out.println(t.getTeamName()));
         List<TournamentMatch> matches = new ArrayList<>();
         AtomicInteger matchCounter = new AtomicInteger(1);
         Map<Integer, TournamentMatch> matchMap = new HashMap<>();

@@ -49,11 +49,11 @@ public class TournamentMatch {
     private String winnerTeamName;
 
     @ManyToOne
-    @JoinColumn(name = "team1_name", referencedColumnName = "team_name")
+    @JoinColumn(name = "team1_id")
     private TournamentTeam team1;
 
     @ManyToOne
-    @JoinColumn(name = "team2_name", referencedColumnName = "team_name")
+    @JoinColumn(name = "team2_id")
     private TournamentTeam team2;
 
     @Column(name = "round", nullable = false)

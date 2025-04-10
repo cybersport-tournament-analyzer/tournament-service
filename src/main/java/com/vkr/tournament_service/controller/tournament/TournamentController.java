@@ -95,7 +95,7 @@ public class TournamentController {
     @PatchMapping("/updateBracket/{tournamentId}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Update tournament bracket")
-    public List<List<List<Map<String, Object>>>> updateTournamentBracket(@PathVariable String tournamentId, UpdateSingleEliminationBracketDto dto, @RequestParam String userId) {
+    public List<List<List<Map<String, Object>>>> updateTournamentBracket(@PathVariable String tournamentId, @RequestBody UpdateSingleEliminationBracketDto dto, @RequestParam String userId) {
         return singleEliminationService.updateBracket(dto.getBracket(), tournamentId, userId);
     }
 

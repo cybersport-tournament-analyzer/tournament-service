@@ -1,6 +1,5 @@
 package com.vkr.tournament_service.entity.team;
 
-import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import jakarta.persistence.*;
@@ -18,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 public class TournamentTeam {
 
     @Id
@@ -28,7 +28,7 @@ public class TournamentTeam {
     @JoinColumn(name = "tournament_id", nullable = false)
     private Tournament tournament;
 
-    @Column(name = "team_name", nullable = false, unique = true)
+    @Column(name = "team_name", nullable = false)
     private String teamName;
 
     @Column(name = "flag")
