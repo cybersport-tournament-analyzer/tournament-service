@@ -46,7 +46,7 @@ public class TournamentStage {
     @Column(name = "match_for_the_third_place", nullable = false)
     private boolean matchForTheThirdPlace;
 
-    @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentMatch> matches = new ArrayList<>();
 }
 

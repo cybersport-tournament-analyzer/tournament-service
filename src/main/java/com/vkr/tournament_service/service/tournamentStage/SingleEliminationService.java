@@ -6,8 +6,8 @@ import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
 import com.vkr.tournament_service.entity.schedule.TournamentSchedule;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
+import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
-import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.match.MatchRepository;
 import com.vkr.tournament_service.repository.team.TeamRepository;
@@ -21,11 +21,13 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
-public class SingleEliminationService {
+public class SingleEliminationService implements StageService {
 
     private final TournamentRepository tournamentRepository;
     private final TournamentValidator tournamentValidator;
@@ -34,30 +36,15 @@ public class SingleEliminationService {
     private final TeamRepository teamRepository;
     private final TeamMapper teamMapper;
 
-    public void createSingleEliminationStage(UUID tournamentId, int stageOrder) {
-        Tournament tournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new EntityNotFoundException("Tournament with id: " + tournamentId + " not found!"));
+    @Override
+    public void createStage(TournamentStage stage, List<TournamentTeam> teams) {
 
-        List<TournamentTeam> teams = teamRepository.findAllByTournamentId(tournamentId);
-        if (teams.size() < 2) {
-            throw new IllegalArgumentException("Not enough teams to create a tournament bracket.");
-        }
-
-        teams.sort(Comparator.comparingInt(TournamentTeam::getAverageRating).reversed());
-
-        for (int i = 0; i < teams.size(); i++) {
-            teams.get(i).setSeed(i + 1);
-        }
-
-        teamRepository.saveAll(teams);
+        Tournament tournament = stage.getTournament();
 
         int totalTeams = teams.size();
-        tournament.setTeamsCount((long) totalTeams);
-        tournamentRepository.save(tournament);
 
         int totalRounds = (int) Math.ceil(Math.log(totalTeams) / Math.log(2));
 
-        TournamentStage stage = stageRepository.findAllByTournamentId(tournamentId).get(stageOrder);
         if (teams.size() < 4 && stage.isMatchForTheThirdPlace()) {
             stage.setMatchForTheThirdPlace(false);
         }
@@ -75,7 +62,7 @@ public class SingleEliminationService {
             generateThirdPlaceMatch(matches, stage, tournament, matchCounter, matchMap);
         }
 
-        stage.setMatches(matches);
+        stage.getMatches().addAll(matches);
         stageRepository.save(stage);
     }
 
@@ -290,9 +277,11 @@ public class SingleEliminationService {
         return match.getTeam1().getTeamName().equals(match.getWinnerTeamName()) ? match.getTeam1() : match.getTeam2();
     }
 
+    @Override
+    public List<List<List<Map<String, Object>>>> getBracket(TournamentStage stage) {
 
-    public List<List<List<Map<String, Object>>>> getBracket(UUID tournamentId) {
-        List<TournamentMatch> matches = matchRepository.findAllByTournamentIdOrderByRoundAsc(tournamentId);
+        List<TournamentMatch> matches = stage.getMatches();
+        matches.sort(Comparator.comparingInt(TournamentMatch::getRound));
         List<List<List<Map<String, Object>>>> bracket = new ArrayList<>();
 
         Integer currentRound = null;
@@ -486,36 +475,45 @@ public class SingleEliminationService {
     }
 
     @Transactional
-    public List<List<List<Map<String, Object>>>> updateBracket(List<List<List<Map<String, Object>>>> bracket, String tournamentId, String userId) {
-        Tournament tournament = tournamentRepository.findById(UUID.fromString(tournamentId))
-                .orElseThrow(() -> new EntityNotFoundException("Tournament with id: " + tournamentId + " not found!"));
-        TournamentStage stage = stageRepository.findAllByTournamentId(UUID.fromString(tournamentId)).get(0);
-        matchRepository.deleteAll(stage.getMatches());
-        tournamentValidator.validateAccess(UUID.fromString(tournamentId), userId);
+    @Override
+    public List<List<List<Map<String, Object>>>> updateBracket(List<List<List<Map<String, Object>>>> bracket, TournamentStage stage) {
         List<String> teamNames = new ArrayList<>();
         List<List<Map<String, Object>>> firstRound = bracket.get(0);
         for (List<Map<String, Object>> match : firstRound) {
             for (Map<String, Object> team : match) {
                 String name = (String) team.get("name");
-                if (name != null)
-                    teamNames.add(name);
+                teamNames.add(name);
             }
         }
-        List<TournamentTeam> teams = teamRepository.findByTournamentIdAndTeamNameIn(UUID.fromString(tournamentId), teamNames);
-        teams.forEach(t -> System.out.println(t.getTeamName()));
+
+        Map<String, TournamentTeam> teamMap = teamRepository
+                .findByTournamentIdAndTeamNameIn(stage.getTournament().getId(), teamNames)
+                .stream()
+                .collect(Collectors.toMap(TournamentTeam::getTeamName, Function.identity()));
+
+        List<TournamentTeam> teams = teamNames.stream()
+                .map(name -> name != null ? teamMap.get(name) : null)
+                .toList();
+
         List<TournamentMatch> matches = new ArrayList<>();
         AtomicInteger matchCounter = new AtomicInteger(1);
         Map<Integer, TournamentMatch> matchMap = new HashMap<>();
 
-        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), matchCounter, matchMap, true);
+        generateBracket(matches, teams, stage, stage.getTournament(), 1, stage.getTournament().getTournamentStartTime().plusDays(1), matchCounter, matchMap, true);
         if (stage.isMatchForTheThirdPlace()) {
-            generateThirdPlaceMatch(matches, stage, tournament, matchCounter, matchMap);
+            generateThirdPlaceMatch(matches, stage, stage.getTournament(), matchCounter, matchMap);
         }
 
-        stage.setMatches(matches);
+        stage.getMatches().clear();
+        stage.getMatches().addAll(matches);
         stageRepository.save(stage);
 
-        return getBracket(UUID.fromString(tournamentId));
+        return getBracket(stage);
+    }
+
+    @Override
+    public Stage getStageType() {
+        return Stage.SINGLE_ELIMINATION;
     }
 }
 

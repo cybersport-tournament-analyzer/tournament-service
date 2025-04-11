@@ -4,6 +4,7 @@ package com.vkr.tournament_service.scheduler;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
+import com.vkr.tournament_service.service.tournament.TournamentService;
 import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,8 @@ public class TournamentStatusScheduler {
 
     private final SingleEliminationService singleEliminationService;
 
+    private final TournamentService tournamentService;
+
     @Scheduled(fixedRate = 60000) // Запуск каждые 60 секунд
     public void updateTournamentStatuses() {
         OffsetDateTime now = OffsetDateTime.now();
@@ -39,7 +42,8 @@ public class TournamentStatusScheduler {
                 if (now.isAfter(tournament.getRegistrationEndTime())) {
                     tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
                     log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
-                    singleEliminationService.createSingleEliminationStage(tournament.getId(), 0);
+                    tournamentService.setTeamsSeeds(tournament);
+                    tournamentService.startFirstStage(tournament);
                 }
             }
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION_ENDED) {

@@ -50,13 +50,6 @@ public class TournamentController {
         return tournamentService.getTournamentByName(tournamentName);
     }
 
-    @GetMapping("/{tournamentId}/bracket")
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "Get tournament bracket by id")
-    public List<List<List<Map<String, Object>>>> getTournamentBracketById(@PathVariable String tournamentId) {
-        return singleEliminationService.getBracket(UUID.fromString(tournamentId));
-    }
-
     @GetMapping("/{tournamentId}/standings")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Get tournament standings by id")
@@ -90,13 +83,6 @@ public class TournamentController {
     @Operation(summary = "Stop tournament registration")
     public TournamentDto stopTournamentRegistration(@PathVariable String tournamentId, @RequestParam String userId) {
         return tournamentService.stopTournamentRegistration(tournamentId, userId);
-    }
-
-    @PatchMapping("/updateBracket/{tournamentId}")
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "Update tournament bracket")
-    public List<List<List<Map<String, Object>>>> updateTournamentBracket(@PathVariable String tournamentId, @RequestBody UpdateSingleEliminationBracketDto dto, @RequestParam String userId) {
-        return singleEliminationService.updateBracket(dto.getBracket(), tournamentId, userId);
     }
 
     @DeleteMapping("/{tournamentId}")

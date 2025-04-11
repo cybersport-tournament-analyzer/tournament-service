@@ -3,6 +3,7 @@ package com.vkr.tournament_service.service.tournament;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
+import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
 import com.vkr.tournament_service.entity.tournamentStage.Stage;
@@ -12,6 +13,7 @@ import com.vkr.tournament_service.exception.WrongTournamentStatusException;
 import com.vkr.tournament_service.mapper.tournament.TournamentMapper;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
+import com.vkr.tournament_service.service.tournamentStage.TournamentStageManager;
 import com.vkr.tournament_service.validator.tournament.TournamentValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,6 +37,7 @@ public class TournamentServiceImpl implements TournamentService {
     private final TournamentMapper tournamentMapper;
     private final TournamentValidator tournamentValidator;
     private final SingleEliminationService singleEliminationService;
+    private final TournamentStageManager tournamentStageManager;
 
     @Override
     public TournamentDto getTournamentByName(String tournamentName) {
@@ -141,15 +145,46 @@ public class TournamentServiceImpl implements TournamentService {
                     "or has already passed");
         }
         currentTournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
-        singleEliminationService.createSingleEliminationStage(UUID.fromString(tournamentId), 0);
+        setTeamsSeeds(currentTournament);
+        startFirstStage(currentTournament);
         tournamentRepository.save(currentTournament);
         return tournamentMapper.toDto(currentTournament);
     }
 
-
-    private Tournament getTournament(String tournamentName) {
+    @Override
+    public Tournament getTournament(String tournamentName) {
         return tournamentRepository.findByTournamentName(tournamentName).orElseThrow(
                 () -> new EntityNotFoundException("Tournament with name=" + tournamentName + " not found")
         );
+    }
+
+    @Override
+    public void startFirstStage(Tournament tournament) {
+        TournamentStage stage = tournament.getStages().get(0);
+        List<TournamentTeam> teams = tournament.getTeams();
+        teams.sort(Comparator.comparingInt(TournamentTeam::getAverageRating).reversed());
+        tournamentStageManager.createStage(stage, teams);
+        tournament.setCurrentStageOrder(stage.getStageOrder());
+        tournamentRepository.save(tournament);
+    }
+
+    @Override
+    public void setTeamsSeeds(Tournament tournament) {
+        List<TournamentTeam> teams = tournament.getTeams();
+        if (teams.size() < 2) {
+            throw new IllegalArgumentException("Not enough teams to create a tournament bracket.");
+        }
+
+        teams.sort(Comparator.comparingInt(TournamentTeam::getAverageRating).reversed());
+
+        for (int i = 0; i < teams.size(); i++) {
+            teams.get(i).setSeed(i + 1);
+        }
+
+        tournament.setTeams(teams);
+
+        int totalTeams = teams.size();
+        tournament.setTeamsCount((long) totalTeams);
+        tournamentRepository.save(tournament);
     }
 }
