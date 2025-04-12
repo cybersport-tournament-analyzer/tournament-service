@@ -1,13 +1,10 @@
 package com.vkr.tournament_service.controller.tournament;
 
-import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
-import com.vkr.tournament_service.dto.tournamentStage.UpdateSingleEliminationBracketDto;
 import com.vkr.tournament_service.mapper.tournament.TournamentMapper;
 import com.vkr.tournament_service.service.tournament.TournamentService;
-import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,8 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -25,7 +20,6 @@ import java.util.UUID;
 public class TournamentController {
 
     private final TournamentService tournamentService;
-    private final SingleEliminationService singleEliminationService;
     private final TournamentMapper tournamentMapper;
 
     @GetMapping
@@ -48,13 +42,6 @@ public class TournamentController {
     @Operation(summary = "Get tournament by name")
     public TournamentDto getTournamentByName(@PathVariable String tournamentName) {
         return tournamentService.getTournamentByName(tournamentName);
-    }
-
-    @GetMapping("/{tournamentId}/standings")
-    @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "Get tournament standings by id")
-    public List<TeamStandingsDto> getTournamentStandingsById(@PathVariable String tournamentId) {
-        return singleEliminationService.getCurrentStandings(UUID.fromString(tournamentId));
     }
 
     @PostMapping

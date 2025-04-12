@@ -11,9 +11,7 @@ import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.match.MatchRepository;
 import com.vkr.tournament_service.repository.team.TeamRepository;
-import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.repository.tournamentStage.TournamentStageRepository;
-import com.vkr.tournament_service.validator.tournament.TournamentValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,9 +26,6 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class SingleEliminationService implements StageService {
-
-    private final TournamentRepository tournamentRepository;
-    private final TournamentValidator tournamentValidator;
     private final TournamentStageRepository stageRepository;
     private final MatchRepository matchRepository;
     private final TeamRepository teamRepository;
@@ -323,6 +318,7 @@ public class SingleEliminationService implements StageService {
         return teamData;
     }
 
+    @Override
     public void advanceTeam(TournamentMatch match) {
         TournamentStage stage = match.getStage();
         int matchNumber = match.getMatchNumber();
@@ -368,6 +364,7 @@ public class SingleEliminationService implements StageService {
         }
     }
 
+    @Override
     public List<TournamentMatch> findParentMatches(TournamentMatch match) {
         int round = match.getRound();
         TournamentStage stage = match.getStage();
@@ -398,6 +395,7 @@ public class SingleEliminationService implements StageService {
         return Stream.of(parent1, parent2).filter(Objects::nonNull).toList();
     }
 
+    @Override
     public List<TournamentMatch> findChildMatches(TournamentMatch match) {
         TournamentStage stage = match.getStage();
         int currentRound = match.getRound();
@@ -441,9 +439,10 @@ public class SingleEliminationService implements StageService {
     }
 
     @Transactional
-    public List<TeamStandingsDto> getCurrentStandings(UUID tournamentId) {
-        List<TournamentMatch> matches = matchRepository.findAllByTournamentIdOrderByRoundAsc(tournamentId);
-        TournamentStage stage = Objects.requireNonNull(tournamentRepository.findById(tournamentId).orElse(null)).getStages().get(0);
+    @Override
+    public List<TeamStandingsDto> getCurrentStandings(TournamentStage stage) {
+        List<TournamentMatch> matches = stage.getMatches();
+        matches.sort(Comparator.comparingInt(TournamentMatch::getRound));
 
         int totalTeams = nextPowerOfTwo(Math.toIntExact(stage.getTournament().getTeamsCount()));
         List<TeamStandingsDto> standings = new ArrayList<>();

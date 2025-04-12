@@ -5,7 +5,6 @@ import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.service.tournament.TournamentService;
-import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,8 +19,6 @@ import java.util.List;
 public class TournamentStatusScheduler {
 
     private final TournamentRepository tournamentRepository;
-
-    private final SingleEliminationService singleEliminationService;
 
     private final TournamentService tournamentService;
 

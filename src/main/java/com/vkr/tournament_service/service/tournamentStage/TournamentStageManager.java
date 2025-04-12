@@ -1,5 +1,7 @@
 package com.vkr.tournament_service.service.tournamentStage;
 
+import com.vkr.tournament_service.dto.team.TeamStandingsDto;
+import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
@@ -41,5 +43,29 @@ public class TournamentStageManager {
         tournamentValidator.validateAccess(stage.getTournament().getId(), userId);
         StageService service = stageServiceFactory.getService(stage.getStageType());
         return service.updateBracket(bracket, stage);
+    }
+
+    public void advanceTeam(TournamentMatch match) {
+        TournamentStage stage = getStageById(match.getStage().getId());
+        StageService service = stageServiceFactory.getService(stage.getStageType());
+        service.advanceTeam(match);
+    }
+
+    public List<TournamentMatch> findParentMatches(TournamentMatch match) {
+        TournamentStage stage = getStageById(match.getStage().getId());
+        StageService service = stageServiceFactory.getService(stage.getStageType());
+        return service.findParentMatches(match);
+    }
+
+    public List<TournamentMatch> findChildMatches(TournamentMatch match) {
+        TournamentStage stage = getStageById(match.getStage().getId());
+        StageService service = stageServiceFactory.getService(stage.getStageType());
+        return service.findChildMatches(match);
+    }
+
+    public List<TeamStandingsDto> getCurrentStandings(UUID stageId) {
+        TournamentStage stage = getStageById(stageId);
+        StageService service = stageServiceFactory.getService(stage.getStageType());
+        return service.getCurrentStandings(stage);
     }
 }

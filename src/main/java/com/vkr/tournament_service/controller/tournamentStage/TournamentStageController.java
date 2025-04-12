@@ -1,5 +1,6 @@
 package com.vkr.tournament_service.controller.tournamentStage;
 
+import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.dto.tournamentStage.UpdateSingleEliminationBracketDto;
 import com.vkr.tournament_service.service.tournamentStage.TournamentStageManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,9 +21,16 @@ public class TournamentStageController {
 
     @GetMapping("/{stageId}/bracket")
     @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "Get bracket by id")
+    @Operation(summary = "Get bracket by stage id")
     public List<List<List<Map<String, Object>>>> getStageBracketById(@PathVariable String stageId) {
         return tournamentStageManager.getBracket(UUID.fromString(stageId));
+    }
+
+    @GetMapping("/{stageId}/standings")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get standings by stage id")
+    public List<TeamStandingsDto> getTournamentStandingsById(@PathVariable String stageId) {
+        return tournamentStageManager.getCurrentStandings(UUID.fromString(stageId));
     }
 
     @PatchMapping("/{stageId}/updateBracket")

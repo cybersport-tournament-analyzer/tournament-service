@@ -14,7 +14,7 @@ import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
 import com.vkr.tournament_service.mapper.match.MatchMapper;
 import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.match.MatchRepository;
-import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
+import com.vkr.tournament_service.service.tournamentStage.TournamentStageManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class MatchServiceImpl implements MatchService {
     private final LobbyStartProducer lobbyStartProducer;
     private final MatchRepository matchRepository;
     private final TeamMapper teamMapper;
-    private final SingleEliminationService singleEliminationService;
+    private final TournamentStageManager tournamentStageManager;
 
     @Override
     public void updateMatchResults(TournamentMatch match, MatchEndEvent event) {
@@ -44,7 +44,7 @@ public class MatchServiceImpl implements MatchService {
             match.getSchedule().setActualEndTime(event.getEndTime());
             match.setWinnerTeamName(match.getTeam1Score() > match.getTeam2Score() ?
                     match.getTeam1().getTeamName() : match.getTeam2().getTeamName());
-            singleEliminationService.advanceTeam(match);
+            tournamentStageManager.advanceTeam(match);
         }
         matchRepository.save(match);
     }
@@ -69,8 +69,8 @@ public class MatchServiceImpl implements MatchService {
             throw new InvalidTournamentTimeException("You can change time only SCHEDULED matches");
         }
 
-        List<TournamentMatch> parentMatches = singleEliminationService.findParentMatches(match);
-        List<TournamentMatch> childMatches = singleEliminationService.findChildMatches(match);
+        List<TournamentMatch> parentMatches = tournamentStageManager.findParentMatches(match);
+        List<TournamentMatch> childMatches = tournamentStageManager.findChildMatches(match);
 
         OffsetDateTime now = OffsetDateTime.now();
         if (newStartTime.isBefore(now)) {

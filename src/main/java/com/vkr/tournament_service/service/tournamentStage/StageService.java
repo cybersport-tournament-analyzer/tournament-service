@@ -1,5 +1,7 @@
 package com.vkr.tournament_service.service.tournamentStage;
 
+import com.vkr.tournament_service.dto.team.TeamStandingsDto;
+import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
@@ -15,4 +17,12 @@ public interface StageService {
     List<List<List<Map<String, Object>>>> getBracket(TournamentStage stage);
 
     List<List<List<Map<String, Object>>>> updateBracket(List<List<List<Map<String, Object>>>> bracket, TournamentStage stage);
+
+    void advanceTeam(TournamentMatch match);
+
+    List<TournamentMatch> findParentMatches(TournamentMatch match);
+
+    List<TournamentMatch> findChildMatches(TournamentMatch match);
+
+    List<TeamStandingsDto> getCurrentStandings(TournamentStage stage);
 }

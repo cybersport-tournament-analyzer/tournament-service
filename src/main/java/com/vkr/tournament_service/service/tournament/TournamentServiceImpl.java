@@ -12,7 +12,6 @@ import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.exception.WrongTournamentStatusException;
 import com.vkr.tournament_service.mapper.tournament.TournamentMapper;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
-import com.vkr.tournament_service.service.tournamentStage.SingleEliminationService;
 import com.vkr.tournament_service.service.tournamentStage.TournamentStageManager;
 import com.vkr.tournament_service.validator.tournament.TournamentValidator;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,6 @@ public class TournamentServiceImpl implements TournamentService {
     private final TournamentRepository tournamentRepository;
     private final TournamentMapper tournamentMapper;
     private final TournamentValidator tournamentValidator;
-    private final SingleEliminationService singleEliminationService;
     private final TournamentStageManager tournamentStageManager;
 
     @Override
