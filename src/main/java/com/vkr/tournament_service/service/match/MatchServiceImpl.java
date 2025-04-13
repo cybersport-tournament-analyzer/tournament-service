@@ -113,9 +113,10 @@ public class MatchServiceImpl implements MatchService {
         TeamDto team2 = teamMapper.toDto(tournamentMatch.getTeam2());
 
         lobbyStartProducer.produce(new LobbyStartEvent(tournamentMatch.getId(),
+                tournamentMatch.getTournament().getId(),
                 tournamentMatch.getStage().getTournament().getTournamentMode(),
                 tournamentMatch.getMatchFormat(),
-                tournamentMatch.getSchedule().getScheduledStartTime().toLocalDateTime(), team1, team2)
+                tournamentMatch.getSchedule().getScheduledStartTime().toLocalDateTime(), team1, team2, tournamentMatch.getTournament().getCreatorId())
         );
 
         log.info("Tournament match started");
