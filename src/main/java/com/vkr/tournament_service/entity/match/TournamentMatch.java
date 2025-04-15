@@ -81,7 +81,7 @@ public class TournamentMatch {
     }
 
     public void addWinRoundsTeam2(int rounds) {
-        winRoundsTeam1 += rounds;
+        winRoundsTeam2 += rounds;
     }
 
     public void addLoseRoundsTeam1(int rounds) {

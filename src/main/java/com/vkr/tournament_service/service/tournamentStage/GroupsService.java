@@ -235,8 +235,8 @@ public class GroupsService implements StageService {
             if (match.getWinnerTeamName() == null) continue;
 
             String winner = match.getWinnerTeamName();
-            int team1Rounds = match.getTeam1Score();
-            int team2Rounds = match.getTeam2Score();
+            int team1Rounds = match.getWinRoundsTeam1();
+            int team2Rounds = match.getWinRoundsTeam2();
 
             TeamStats stats1 = statsMap.get(team1Name);
             TeamStats stats2 = statsMap.get(team2Name);
