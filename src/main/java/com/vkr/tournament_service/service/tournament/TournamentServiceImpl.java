@@ -69,6 +69,9 @@ public class TournamentServiceImpl implements TournamentService {
                             .matchFormat(tournamentCreateDto.getStages().get(i).getMatchFormat())
                             .matchForTheThirdPlace(tournamentCreateDto.getStages().get(i).isMatchForTheThirdPlace())
                             .matches(new ArrayList<>())
+                            .numberOfGroups(tournamentCreateDto.getStages().get(i).getNumberOfGroups())
+                            .teamsToAdvance(tournamentCreateDto.getStages().get(i).getTeamsToAdvance())
+                            .totalRounds(tournamentCreateDto.getStages().get(i).getTotalRounds())
                             .build();
                 })
                 .collect(Collectors.toList());

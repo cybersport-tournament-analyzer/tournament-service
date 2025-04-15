@@ -15,10 +15,11 @@ import lombok.extern.jackson.Jacksonized;
 public class TournamentStageCreateDto {
     @NotBlank
     private String stageType;
-    @NotBlank
     private String finalMatchFormat;
     @NotBlank
     private String matchFormat;
-    @NotBlank
     private boolean matchForTheThirdPlace;
+    private int numberOfGroups;
+    private int teamsToAdvance;
+    private int totalRounds;
 }

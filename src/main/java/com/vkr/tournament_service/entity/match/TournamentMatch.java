@@ -62,4 +62,6 @@ public class TournamentMatch {
     @Column(name = "match_number", nullable = false)
     private int matchNumber;
 
+    @Column(name = "group_letter")
+    private String groupLetter;
 }

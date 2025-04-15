@@ -26,4 +26,5 @@ public class MatchDto {
     private String team1Name;
     private String team2Name;
     private ScheduleDto schedule;
+    private String groupLetter;
 }

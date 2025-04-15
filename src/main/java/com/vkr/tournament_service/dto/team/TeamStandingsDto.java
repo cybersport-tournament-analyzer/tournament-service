@@ -14,4 +14,8 @@ import lombok.extern.jackson.Jacksonized;
 public class TeamStandingsDto {
     private TeamDto teamDto;
     private int place;
+    private int wins;
+    private int losses;
+    private int points;
+    private String groupLetter;
 }
