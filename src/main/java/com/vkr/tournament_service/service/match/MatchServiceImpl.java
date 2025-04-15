@@ -39,6 +39,10 @@ public class MatchServiceImpl implements MatchService {
     public void updateMatchResults(TournamentMatch match, MatchEndEvent event) {
         match.setTeam1Score(event.getTeam1Score());
         match.setTeam2Score(event.getTeam2Score());
+        match.addWinRoundsTeam1(event.getMatch().getTeam1().getStats().getScore());
+        match.addWinRoundsTeam2(event.getMatch().getTeam2().getStats().getScore());
+        match.addLoseRoundsTeam1(event.getMatch().getTeam2().getStats().getScore());
+        match.addLoseRoundsTeam2(event.getMatch().getTeam2().getStats().getScore());
         if (isSeriesFinished(match)) {
             match.getSchedule().setStatus(ScheduleStatus.COMPLETED);
             match.getSchedule().setActualEndTime(event.getEndTime());

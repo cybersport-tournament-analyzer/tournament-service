@@ -17,5 +17,8 @@ public class TeamStandingsDto {
     private int wins;
     private int losses;
     private int points;
+    private int roundsWon;
+    private int roundsLost;
+    private int roundDifference;
     private String groupLetter;
 }

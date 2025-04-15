@@ -206,6 +206,7 @@ public class GroupsService implements StageService {
 
         Map<String, Map<String, TeamStats>> groupStatsMap = new HashMap<>();
         Map<String, TournamentTeam> teamMap = new HashMap<>();
+        Map<String, List<TournamentMatch>> teamMatchesMap = new HashMap<>();
 
         for (TournamentMatch match : matches) {
             String group = match.getGroupLetter();
@@ -214,34 +215,44 @@ public class GroupsService implements StageService {
             TournamentTeam team1 = match.getTeam1();
             TournamentTeam team2 = match.getTeam2();
 
+            if (team1 == null || team2 == null) continue;
+
+            String team1Name = team1.getTeamName();
+            String team2Name = team2.getTeamName();
+
             groupStatsMap.putIfAbsent(group, new HashMap<>());
             Map<String, TeamStats> statsMap = groupStatsMap.get(group);
 
-            if (team1 != null) {
-                statsMap.putIfAbsent(team1.getTeamName(), new TeamStats(group));
-                teamMap.putIfAbsent(team1.getTeamName(), team1);
-            }
+            teamMap.putIfAbsent(team1Name, team1);
+            teamMap.putIfAbsent(team2Name, team2);
 
-            if (team2 != null) {
-                statsMap.putIfAbsent(team2.getTeamName(), new TeamStats(group));
-                teamMap.putIfAbsent(team2.getTeamName(), team2);
-            }
+            statsMap.putIfAbsent(team1Name, new TeamStats(group));
+            statsMap.putIfAbsent(team2Name, new TeamStats(group));
 
-            // Пропускаем если матч не завершён
+            teamMatchesMap.computeIfAbsent(team1Name, k -> new ArrayList<>()).add(match);
+            teamMatchesMap.computeIfAbsent(team2Name, k -> new ArrayList<>()).add(match);
+
             if (match.getWinnerTeamName() == null) continue;
 
             String winner = match.getWinnerTeamName();
+            int team1Rounds = match.getTeam1Score();
+            int team2Rounds = match.getTeam2Score();
 
-            TeamStats team1Stats = statsMap.get(team1.getTeamName());
-            TeamStats team2Stats = statsMap.get(team2.getTeamName());
+            TeamStats stats1 = statsMap.get(team1Name);
+            TeamStats stats2 = statsMap.get(team2Name);
 
-            if (team1.getTeamName().equals(winner)) {
-                team1Stats.incrementWins();
-                team2Stats.incrementLosses();
-            } else if (team2.getTeamName().equals(winner)) {
-                team2Stats.incrementWins();
-                team1Stats.incrementLosses();
+            // Победы/поражения
+            if (team1Name.equals(winner)) {
+                stats1.incrementWins();
+                stats2.incrementLosses();
+            } else {
+                stats2.incrementWins();
+                stats1.incrementLosses();
             }
+
+            // Разница раундов
+            stats1.addRounds(team1Rounds, team2Rounds);
+            stats2.addRounds(team2Rounds, team1Rounds);
         }
 
         List<TeamStandingsDto> result = new ArrayList<>();
@@ -251,7 +262,22 @@ public class GroupsService implements StageService {
             Map<String, TeamStats> statsMap = groupEntry.getValue();
 
             List<Map.Entry<String, TeamStats>> sorted = statsMap.entrySet().stream()
-                    .sorted(Comparator.comparingInt((Map.Entry<String, TeamStats> e) -> e.getValue().getWins()).reversed())
+                    .sorted((e1, e2) -> {
+                        TeamStats s1 = e1.getValue();
+                        TeamStats s2 = e2.getValue();
+                        int cmp = Integer.compare(s2.getPoints(), s1.getPoints()); // по очкам
+                        if (cmp != 0) return cmp;
+
+                        // личка
+                        TournamentMatch headToHead = findMatchBetween(e1.getKey(), e2.getKey(), teamMatchesMap);
+                        if (headToHead != null && headToHead.getWinnerTeamName() != null) {
+                            if (headToHead.getWinnerTeamName().equals(e1.getKey())) return -1;
+                            if (headToHead.getWinnerTeamName().equals(e2.getKey())) return 1;
+                        }
+
+                        // разница раундов
+                        return Integer.compare(s2.getRoundDifference(), s1.getRoundDifference());
+                    })
                     .toList();
 
             int place = 1;
@@ -266,8 +292,11 @@ public class GroupsService implements StageService {
                         .place(place++)
                         .wins(stats.getWins())
                         .losses(stats.getLosses())
-                        .points(stats.getWins() * 2)
+                        .points(stats.getPoints())
                         .groupLetter(group)
+                        .roundsWon(stats.getRoundsWon())
+                        .roundsLost(stats.getRoundsLost())
+                        .roundDifference(stats.getRoundDifference())
                         .build());
             }
         }
@@ -275,5 +304,18 @@ public class GroupsService implements StageService {
         return result;
     }
 
+    private TournamentMatch findMatchBetween(String team1, String team2, Map<String, List<TournamentMatch>> matchMap) {
+        List<TournamentMatch> matches = matchMap.getOrDefault(team1, List.of());
+        for (TournamentMatch match : matches) {
+            if (match.getTeam1() != null && match.getTeam2() != null) {
+                String t1 = match.getTeam1().getTeamName();
+                String t2 = match.getTeam2().getTeamName();
+                if ((t1.equals(team1) && t2.equals(team2)) || (t1.equals(team2) && t2.equals(team1))) {
+                    return match;
+                }
+            }
+        }
+        return null;
+    }
 
 }
