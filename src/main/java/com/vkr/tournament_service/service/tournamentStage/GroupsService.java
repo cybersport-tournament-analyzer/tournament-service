@@ -241,7 +241,6 @@ public class GroupsService implements StageService {
             TeamStats stats1 = statsMap.get(team1Name);
             TeamStats stats2 = statsMap.get(team2Name);
 
-            // Победы/поражения
             if (team1Name.equals(winner)) {
                 stats1.incrementWins();
                 stats2.incrementLosses();
@@ -250,7 +249,6 @@ public class GroupsService implements StageService {
                 stats1.incrementLosses();
             }
 
-            // Разница раундов
             stats1.addRounds(team1Rounds, team2Rounds);
             stats2.addRounds(team2Rounds, team1Rounds);
         }
@@ -261,29 +259,24 @@ public class GroupsService implements StageService {
             String group = groupEntry.getKey();
             Map<String, TeamStats> statsMap = groupEntry.getValue();
 
-            List<Map.Entry<String, TeamStats>> sorted = statsMap.entrySet().stream()
-                    .sorted((e1, e2) -> {
-                        TeamStats s1 = e1.getValue();
-                        TeamStats s2 = e2.getValue();
-                        int cmp = Integer.compare(s2.getPoints(), s1.getPoints()); // по очкам
-                        if (cmp != 0) return cmp;
+            // Группируем по очкам
+            Map<Integer, List<String>> pointsGroups = new TreeMap<>(Comparator.reverseOrder());
+            for (Map.Entry<String, TeamStats> entry : statsMap.entrySet()) {
+                pointsGroups.computeIfAbsent(entry.getValue().getPoints(), k -> new ArrayList<>()).add(entry.getKey());
+            }
 
-                        // личка
-                        TournamentMatch headToHead = findMatchBetween(e1.getKey(), e2.getKey(), teamMatchesMap);
-                        if (headToHead != null && headToHead.getWinnerTeamName() != null) {
-                            if (headToHead.getWinnerTeamName().equals(e1.getKey())) return -1;
-                            if (headToHead.getWinnerTeamName().equals(e2.getKey())) return 1;
-                        }
-
-                        // разница раундов
-                        return Integer.compare(s2.getRoundDifference(), s1.getRoundDifference());
-                    })
-                    .toList();
+            List<String> sortedTeamNames = new ArrayList<>();
+            for (List<String> tiedTeams : pointsGroups.values()) {
+                if (tiedTeams.size() == 1) {
+                    sortedTeamNames.addAll(tiedTeams);
+                } else {
+                    sortedTeamNames.addAll(breakTieBetweenEqualTeams(tiedTeams, teamMatchesMap, statsMap));
+                }
+            }
 
             int place = 1;
-            for (Map.Entry<String, TeamStats> entry : sorted) {
-                String teamName = entry.getKey();
-                TeamStats stats = entry.getValue();
+            for (String teamName : sortedTeamNames) {
+                TeamStats stats = statsMap.get(teamName);
                 TournamentTeam tournamentTeam = teamMap.get(teamName);
                 TeamDto teamDto = teamMapper.toDto(tournamentTeam);
 
@@ -304,18 +297,55 @@ public class GroupsService implements StageService {
         return result;
     }
 
-    private TournamentMatch findMatchBetween(String team1, String team2, Map<String, List<TournamentMatch>> matchMap) {
-        List<TournamentMatch> matches = matchMap.getOrDefault(team1, List.of());
-        for (TournamentMatch match : matches) {
-            if (match.getTeam1() != null && match.getTeam2() != null) {
+
+    private List<String> breakTieBetweenEqualTeams(List<String> tiedTeams,
+                                                   Map<String, List<TournamentMatch>> teamMatchesMap,
+                                                   Map<String, TeamStats> allStats) {
+        Map<String, Integer> headToHeadPoints = new HashMap<>();
+        Map<String, Integer> headToHeadRoundDiff = new HashMap<>();
+
+        for (String team : tiedTeams) {
+            headToHeadPoints.put(team, 0);
+            headToHeadRoundDiff.put(team, 0);
+        }
+
+        // Анализ матчей только между этими командами
+        for (String team : tiedTeams) {
+            List<TournamentMatch> matches = teamMatchesMap.getOrDefault(team, List.of());
+            for (TournamentMatch match : matches) {
+                if (match.getTeam1() == null || match.getTeam2() == null) continue;
                 String t1 = match.getTeam1().getTeamName();
                 String t2 = match.getTeam2().getTeamName();
-                if ((t1.equals(team1) && t2.equals(team2)) || (t1.equals(team2) && t2.equals(team1))) {
-                    return match;
+
+                if (!tiedTeams.contains(t1) || !tiedTeams.contains(t2)) continue;
+                if (match.getWinnerTeamName() == null) continue;
+
+                String winner = match.getWinnerTeamName();
+                if (winner.equals(t1)) {
+                    headToHeadPoints.merge(t1, 3, Integer::sum);
+                } else {
+                    headToHeadPoints.merge(t2, 3, Integer::sum);
                 }
+
+                headToHeadRoundDiff.merge(t1, match.getWinRoundsTeam1() - match.getWinRoundsTeam2(), Integer::sum);
+                headToHeadRoundDiff.merge(t2, match.getWinRoundsTeam2() - match.getWinRoundsTeam1(), Integer::sum);
             }
         }
-        return null;
+
+        return tiedTeams.stream()
+                .sorted((t1, t2) -> {
+                    int cmp = Integer.compare(headToHeadPoints.get(t2), headToHeadPoints.get(t1));
+                    if (cmp != 0) return cmp;
+
+                    cmp = Integer.compare(
+                            allStats.get(t2).getRoundDifference(),
+                            allStats.get(t1).getRoundDifference()
+                    );
+                    if (cmp != 0) return cmp;
+
+                    return Integer.compare(headToHeadRoundDiff.get(t2), headToHeadRoundDiff.get(t1));
+                })
+                .toList();
     }
 
 }
