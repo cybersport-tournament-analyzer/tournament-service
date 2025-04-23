@@ -24,5 +24,7 @@ public class TournamentStageDto {
     private String finalMatchFormat;
     private String matchFormat;
     private boolean matchForTheThirdPlace;
+    private int numberOfGroups;
+    private int teamsToAdvance;
     private List<MatchDto> matches;
 }

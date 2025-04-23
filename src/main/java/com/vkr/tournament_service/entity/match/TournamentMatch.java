@@ -8,8 +8,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -45,15 +43,27 @@ public class TournamentMatch {
     @Column(name = "team2_score", nullable = false)
     private int team2Score;
 
+    @Column(name = "win_rounds_team1")
+    private int winRoundsTeam1;
+
+    @Column(name = "lose_rounds_team1")
+    private int loseRoundsTeam1;
+
+    @Column(name = "win_rounds_team2")
+    private int winRoundsTeam2;
+
+    @Column(name = "lose_rounds_team2")
+    private int loseRoundsTeam2;
+
     @Column(name = "winner_team_name")
     private String winnerTeamName;
 
     @ManyToOne
-    @JoinColumn(name = "team1_name", referencedColumnName = "team_name")
+    @JoinColumn(name = "team1_id")
     private TournamentTeam team1;
 
     @ManyToOne
-    @JoinColumn(name = "team2_name", referencedColumnName = "team_name")
+    @JoinColumn(name = "team2_id")
     private TournamentTeam team2;
 
     @Column(name = "round", nullable = false)
@@ -62,4 +72,23 @@ public class TournamentMatch {
     @Column(name = "match_number", nullable = false)
     private int matchNumber;
 
+    @Column(name = "group_letter")
+    private String groupLetter;
+
+
+    public void addWinRoundsTeam1(int rounds) {
+        winRoundsTeam1 += rounds;
+    }
+
+    public void addWinRoundsTeam2(int rounds) {
+        winRoundsTeam2 += rounds;
+    }
+
+    public void addLoseRoundsTeam1(int rounds) {
+        loseRoundsTeam1 += rounds;
+    }
+
+    public void addLoseRoundsTeam2(int rounds) {
+        loseRoundsTeam2 += rounds;
+    }
 }

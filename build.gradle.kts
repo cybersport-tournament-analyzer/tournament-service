@@ -43,7 +43,6 @@ dependencies {
 	implementation("org.mapstruct:mapstruct:1.6.3")
 	annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-	implementation("com.amazonaws:aws-java-sdk-s3:1.12.464")
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

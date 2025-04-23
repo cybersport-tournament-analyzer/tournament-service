@@ -37,16 +37,22 @@ public class TournamentStage {
     @Column(name = "total_rounds", nullable = false)
     private int totalRounds;
 
-    @Column(name = "final_match_format", nullable = false)
+    @Column(name = "final_match_format")
     private String finalMatchFormat;
 
     @Column(name = "match_format", nullable = false)
     private String matchFormat;
 
-    @Column(name = "match_for_the_third_place", nullable = false)
+    @Column(name = "match_for_the_third_place")
     private boolean matchForTheThirdPlace;
 
-    @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL)
+    @Column(name = "number_of_groups")
+    private Integer numberOfGroups;
+
+    @Column(name = "teams_to_advance")
+    private Integer teamsToAdvance;
+
+    @OneToMany(mappedBy = "stage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentMatch> matches = new ArrayList<>();
 }
 

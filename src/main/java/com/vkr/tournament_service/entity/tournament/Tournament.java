@@ -45,9 +45,6 @@ public class Tournament {
     @Column(name = "tournament_mode", nullable = false)
     private String tournamentMode;
 
-    @Column(name = "winner_team_name")
-    private String winnerTeamName;
-
     @Column(name = "created_at", nullable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -71,7 +68,7 @@ public class Tournament {
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentStage> stages = new ArrayList<>();
 
-    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TournamentTeam> teams = new ArrayList<>();
 
 
