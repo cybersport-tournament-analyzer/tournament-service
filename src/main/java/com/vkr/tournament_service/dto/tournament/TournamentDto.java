@@ -27,6 +27,7 @@ public class TournamentDto {
     private Long teamsCount;
     private int substitutionsNumber;
     private String tournamentMode;
+    private String description;
     private LocalDateTime createdAt;
     private OffsetDateTime registrationStartTime;
     private OffsetDateTime registrationEndTime;

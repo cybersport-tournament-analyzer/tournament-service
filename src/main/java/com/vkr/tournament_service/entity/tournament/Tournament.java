@@ -42,6 +42,9 @@ public class Tournament {
     @Column(name = "substitutions_number", nullable = false)
     private int substitutionsNumber;
 
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "tournament_mode", nullable = false)
     private String tournamentMode;
 
