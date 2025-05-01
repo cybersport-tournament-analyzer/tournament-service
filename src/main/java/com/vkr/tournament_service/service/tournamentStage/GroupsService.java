@@ -333,12 +333,21 @@ public class GroupsService implements StageService {
             grouped.computeIfAbsent(dto.getGroupLetter(), k -> new ArrayList<>()).add(dto);
         }
 
-        // Для каждой группы берём top N команд
-        int teamsToAdvancePerGroup = stage.getTeamsToAdvance();
+        // Сортируем внутри каждой группы по месту
         for (List<TeamStandingsDto> groupList : grouped.values()) {
-            int count = Math.min(teamsToAdvancePerGroup, groupList.size());
-            for (int i = 0; i < count; i++) {
-                advanceTeams.add(teamMapper.toEntity(groupList.get(i).getTeamDto()));
+            groupList.sort(Comparator.comparingInt(TeamStandingsDto::getPlace));
+        }
+
+        int teamsToAdvancePerGroup = stage.getTeamsToAdvance();
+
+        // Итерируем по местам: 1, 2, 3, ..., teamsToAdvancePerGroup
+        for (int place = 1; place <= teamsToAdvancePerGroup; place++) {
+            for (List<TeamStandingsDto> groupList : grouped.values()) {
+                int finalPlace = place;
+                groupList.stream()
+                        .filter(dto -> dto.getPlace() == finalPlace)
+                        .findFirst()
+                        .ifPresent(dto -> advanceTeams.add(teamMapper.toEntity(dto.getTeamDto())));
             }
         }
 
