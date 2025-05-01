@@ -63,7 +63,7 @@ public class TournamentServiceImpl implements TournamentService {
                     String stageName = tournamentCreateDto.getStages().get(i).getStageType();
                     return TournamentStage.builder()
                             .tournament(tournament)
-                            .stageOrder(i + 1)
+                            .stageOrder(i)
                             .stageType(Stage.fromName(stageName))
                             .finalMatchFormat(tournamentCreateDto.getStages().get(i).getFinalMatchFormat())
                             .matchFormat(tournamentCreateDto.getStages().get(i).getMatchFormat())
