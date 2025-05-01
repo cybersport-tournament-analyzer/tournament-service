@@ -76,6 +76,15 @@ public class TournamentServiceImpl implements TournamentService {
                 })
                 .collect(Collectors.toList());
 
+        for (TournamentStage stage : stages) {
+            Stage stageType = stage.getStageType();
+            if (stageType.equals(Stage.SINGLE_ELIMINATION) || stageType.equals(Stage.DOUBLE_ELIMINATION)) {
+                if (stage.getStageOrder() != tournament.getStages().size()) {
+                    throw new WrongTournamentStatusException("Stage of type " + stageType + " must be the last in the tournament.");
+                }
+            }
+        }
+
         tournament.setStages(stages);
 
         tournamentRepository.save(tournament);
@@ -166,6 +175,20 @@ public class TournamentServiceImpl implements TournamentService {
         teams.sort(Comparator.comparingInt(TournamentTeam::getAverageRating).reversed());
         tournamentStageManager.createStage(stage, teams);
         tournament.setCurrentStageOrder(stage.getStageOrder());
+        tournamentRepository.save(tournament);
+    }
+
+    @Override
+    public void startNextStage(Tournament tournament, List<TournamentTeam> teams) {
+        int currentTournamentStage = tournament.getCurrentStageOrder();
+        if (tournament.getStages().size() == currentTournamentStage){
+            tournament.setTournamentStatus(TournamentStatus.COMPLETED);
+        }
+        else{
+            TournamentStage stage = tournament.getStages().get(currentTournamentStage + 1);
+            tournamentStageManager.createStage(stage, teams);
+            tournament.setCurrentStageOrder(stage.getStageOrder());
+        }
         tournamentRepository.save(tournament);
     }
 

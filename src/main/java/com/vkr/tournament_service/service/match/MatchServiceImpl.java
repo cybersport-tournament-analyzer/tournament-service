@@ -14,6 +14,7 @@ import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
 import com.vkr.tournament_service.mapper.match.MatchMapper;
 import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.match.MatchRepository;
+import com.vkr.tournament_service.service.tournament.TournamentService;
 import com.vkr.tournament_service.service.tournamentStage.TournamentStageManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class MatchServiceImpl implements MatchService {
     private final MatchRepository matchRepository;
     private final TeamMapper teamMapper;
     private final TournamentStageManager tournamentStageManager;
+    private final TournamentService tournamentService;
 
     @Override
     public void updateMatchResults(TournamentMatch match, MatchEndEvent event) {
@@ -49,6 +51,11 @@ public class MatchServiceImpl implements MatchService {
             match.setWinnerTeamName(match.getTeam1Score() > match.getTeam2Score() ?
                     match.getTeam1().getTeamName() : match.getTeam2().getTeamName());
             tournamentStageManager.advanceTeam(match);
+            matchRepository.save(match);
+            if (tournamentStageManager.isStageFinished(match.getStage().getId())) {
+                tournamentService.startNextStage(match.getTournament(),
+                        tournamentStageManager.getTeamsToNextStage(match.getStage().getId()));
+            }
         }
         matchRepository.save(match);
     }

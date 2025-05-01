@@ -1,6 +1,5 @@
 package com.vkr.tournament_service.dto.tournament;
 
-import com.vkr.tournament_service.dto.match.MatchDto;
 import com.vkr.tournament_service.dto.team.TeamDto;
 import com.vkr.tournament_service.dto.tournamentStage.TournamentStageDto;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
@@ -28,7 +27,6 @@ public class TournamentDto {
     private Long teamsCount;
     private int substitutionsNumber;
     private String tournamentMode;
-    private String winnerTeamName;
     private LocalDateTime createdAt;
     private OffsetDateTime registrationStartTime;
     private OffsetDateTime registrationEndTime;

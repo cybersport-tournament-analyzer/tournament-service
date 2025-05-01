@@ -50,7 +50,12 @@ public class SingleEliminationService implements StageService {
         AtomicInteger matchCounter = new AtomicInteger(1);
         Map<Integer, TournamentMatch> matchMap = new HashMap<>();
 
-        generateBracket(matches, teams, stage, tournament, 1, tournament.getTournamentStartTime().plusDays(1), matchCounter, matchMap, false);
+        TournamentMatch lastMatchInPreviousStage = findLatestMatchFromPreviousStage(stage).orElse(null);
+        OffsetDateTime startTime = lastMatchInPreviousStage != null ?
+                lastMatchInPreviousStage.getSchedule().getScheduledStartTime().plusDays(1)
+                : tournament.getTournamentStartTime().plusDays(1);
+
+        generateBracket(matches, teams, stage, tournament, 1, startTime, matchCounter, matchMap, false);
 
         // Добавляем матч за 3-е место, если включен
         if (stage.isMatchForTheThirdPlace()) {
@@ -365,6 +370,11 @@ public class SingleEliminationService implements StageService {
     }
 
     @Override
+    public boolean isStageFinished(TournamentStage stage) {
+        return stage.getMatches().stream().allMatch(match -> match.getWinnerTeamName() != null);
+    }
+
+    @Override
     public List<TournamentMatch> findParentMatches(TournamentMatch match) {
         int round = match.getRound();
         TournamentStage stage = match.getStage();
@@ -473,6 +483,11 @@ public class SingleEliminationService implements StageService {
         return standings;
     }
 
+    @Override
+    public List<TournamentTeam> getTeamsToNextStage(TournamentStage stage) {
+        return List.of();
+    }
+
     @Transactional
     @Override
     public List<List<List<Map<String, Object>>>> updateBracket(List<List<List<Map<String, Object>>>> bracket, TournamentStage stage) {
@@ -514,5 +529,20 @@ public class SingleEliminationService implements StageService {
     public Stage getStageType() {
         return Stage.SINGLE_ELIMINATION;
     }
+
+    private Optional<TournamentMatch> findLatestMatchFromPreviousStage(TournamentStage currentStage) {
+        Tournament tournament = currentStage.getTournament();
+        int currentOrder = currentStage.getStageOrder();
+
+        return tournament.getStages().stream()
+                .filter(stage -> stage.getStageOrder() == currentOrder - 1)
+                .findFirst()
+                .flatMap(prevStage ->
+                        prevStage.getMatches().stream()
+                                .filter(match -> match.getSchedule().getScheduledStartTime() != null)
+                                .max(Comparator.comparing(m -> m.getSchedule().getActualStartTime()))
+                );
+    }
+
 }
 
