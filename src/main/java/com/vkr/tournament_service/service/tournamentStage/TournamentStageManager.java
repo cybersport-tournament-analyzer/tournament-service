@@ -68,4 +68,16 @@ public class TournamentStageManager {
         StageService service = stageServiceFactory.getService(stage.getStageType());
         return service.getCurrentStandings(stage);
     }
+
+    public boolean isStageFinished(UUID stageId) {
+        TournamentStage stage = getStageById(stageId);
+        StageService service = stageServiceFactory.getService(stage.getStageType());
+        return service.isStageFinished(stage);
+    }
+
+    public List<TournamentTeam> getTeamsToNextStage(UUID stageId) {
+        TournamentStage stage = getStageById(stageId);
+        StageService service = stageServiceFactory.getService(stage.getStageType());
+        return service.getTeamsToNextStage(stage);
+    }
 }

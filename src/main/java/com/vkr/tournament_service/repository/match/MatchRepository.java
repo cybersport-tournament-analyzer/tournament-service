@@ -13,4 +13,6 @@ public interface MatchRepository extends JpaRepository<TournamentMatch, UUID> {
     List<TournamentMatch> findAllByTournamentIdOrderByRoundAsc(UUID tournamentId);
 
     TournamentMatch findByStageAndRoundAndMatchNumber(TournamentStage stage, int childRound, int childMatchNumber);
+
+    List<TournamentMatch> findByStageAndRound(TournamentStage stage, int round);
 }

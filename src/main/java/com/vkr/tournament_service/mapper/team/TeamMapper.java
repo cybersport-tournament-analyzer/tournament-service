@@ -30,4 +30,6 @@ public interface TeamMapper {
         team.setTournament(tournament);
         return team;
     }
+
+    TournamentTeam toEntity(TeamDto teamDto);
 }

@@ -20,9 +20,13 @@ public interface StageService {
 
     void advanceTeam(TournamentMatch match);
 
+    boolean isStageFinished(TournamentStage stage);
+
     List<TournamentMatch> findParentMatches(TournamentMatch match);
 
     List<TournamentMatch> findChildMatches(TournamentMatch match);
 
     List<TeamStandingsDto> getCurrentStandings(TournamentStage stage);
+
+    List<TournamentTeam> getTeamsToNextStage(TournamentStage stage);
 }

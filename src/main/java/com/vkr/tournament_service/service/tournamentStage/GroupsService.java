@@ -7,6 +7,7 @@ import com.vkr.tournament_service.entity.match.TournamentMatch;
 import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
 import com.vkr.tournament_service.entity.schedule.TournamentSchedule;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
+import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournamentStage.Pair;
 import com.vkr.tournament_service.entity.tournamentStage.Stage;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
@@ -16,7 +17,9 @@ import com.vkr.tournament_service.repository.tournamentStage.TournamentStageRepo
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +37,14 @@ public class GroupsService implements StageService {
     public void createStage(TournamentStage stage, List<TournamentTeam> teams) {
         int numGroups = stage.getNumberOfGroups();
         int roundsPerPair = stage.getTotalRounds();
+        Tournament tournament = stage.getTournament();
 
         List<List<TournamentTeam>> groups = splitIntoGroups(teams, numGroups);
+
+        TournamentMatch lastMatchInPreviousStage = findLatestMatchFromPreviousStage(stage).orElse(null);
+        OffsetDateTime startTime = lastMatchInPreviousStage != null ?
+                lastMatchInPreviousStage.getSchedule().getScheduledStartTime().plusDays(1)
+                : tournament.getTournamentStartTime().plusDays(1);
 
         for (int groupIndex = 0; groupIndex < groups.size(); groupIndex++) {
             List<TournamentTeam> group = groups.get(groupIndex);
@@ -72,7 +81,7 @@ public class GroupsService implements StageService {
                         TournamentSchedule schedule = TournamentSchedule.builder()
                                 .match(match)
                                 .status(ScheduleStatus.SCHEDULED)
-                                .scheduledStartTime(stage.getTournament().getTournamentStartTime()
+                                .scheduledStartTime(startTime
                                         .plusDays(match.getRound()))
                                 .build();
 
@@ -190,6 +199,11 @@ public class GroupsService implements StageService {
     }
 
     @Override
+    public boolean isStageFinished(TournamentStage stage) {
+        return stage.getMatches().stream().allMatch(match -> match.getWinnerTeamName() != null);
+    }
+
+    @Override
     public List<TournamentMatch> findParentMatches(TournamentMatch match) {
         return Collections.emptyList();
     }
@@ -266,11 +280,22 @@ public class GroupsService implements StageService {
             }
 
             List<String> sortedTeamNames = new ArrayList<>();
-            for (List<String> tiedTeams : pointsGroups.values()) {
-                if (tiedTeams.size() == 1) {
-                    sortedTeamNames.addAll(tiedTeams);
-                } else {
-                    sortedTeamNames.addAll(breakTieBetweenEqualTeams(tiedTeams, teamMatchesMap, statsMap));
+            if (matches.stream().noneMatch(m -> m.getWinnerTeamName() != null)) {
+                // Нет ни одного сыгранного матча — сортируем команды по seed
+                sortedTeamNames = statsMap.keySet().stream()
+                        .sorted(Comparator.comparingInt(name -> {
+                            TournamentTeam team = teamMap.get(name);
+                            return team.getSeed(); // Убедись, что getSeed() есть
+                        }))
+                        .collect(Collectors.toList());
+            } else {
+                // Есть сыгранные матчи — обычная сортировка
+                for (List<String> tiedTeams : pointsGroups.values()) {
+                    if (tiedTeams.size() == 1) {
+                        sortedTeamNames.addAll(tiedTeams);
+                    } else {
+                        sortedTeamNames.addAll(breakTieBetweenEqualTeams(tiedTeams, teamMatchesMap, statsMap));
+                    }
                 }
             }
 
@@ -295,6 +320,29 @@ public class GroupsService implements StageService {
         }
 
         return result;
+    }
+
+    @Override
+    public List<TournamentTeam> getTeamsToNextStage(TournamentStage stage) {
+        List<TournamentTeam> advanceTeams = new ArrayList<>();
+        List<TeamStandingsDto> standings = getCurrentStandings(stage);
+
+        // Группируем команды по буквам группы
+        Map<String, List<TeamStandingsDto>> grouped = new HashMap<>();
+        for (TeamStandingsDto dto : standings) {
+            grouped.computeIfAbsent(dto.getGroupLetter(), k -> new ArrayList<>()).add(dto);
+        }
+
+        // Для каждой группы берём top N команд
+        int teamsToAdvancePerGroup = stage.getTeamsToAdvance();
+        for (List<TeamStandingsDto> groupList : grouped.values()) {
+            int count = Math.min(teamsToAdvancePerGroup, groupList.size());
+            for (int i = 0; i < count; i++) {
+                advanceTeams.add(teamMapper.toEntity(groupList.get(i).getTeamDto()));
+            }
+        }
+
+        return advanceTeams;
     }
 
 
@@ -348,4 +396,17 @@ public class GroupsService implements StageService {
                 .toList();
     }
 
+    private Optional<TournamentMatch> findLatestMatchFromPreviousStage(TournamentStage currentStage) {
+        Tournament tournament = currentStage.getTournament();
+        int currentOrder = currentStage.getStageOrder();
+
+        return tournament.getStages().stream()
+                .filter(stage -> stage.getStageOrder() == currentOrder - 1)
+                .findFirst()
+                .flatMap(prevStage ->
+                        prevStage.getMatches().stream()
+                                .filter(match -> match.getSchedule().getScheduledStartTime() != null)
+                                .max(Comparator.comparing(m -> m.getSchedule().getActualStartTime()))
+                );
+    }
 }
