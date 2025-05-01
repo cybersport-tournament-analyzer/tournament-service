@@ -23,6 +23,8 @@ public class TournamentCreateDto {
     @NotBlank
     private String creatorId;
 
+    private String description;
+
     @Positive
     private Long teamsCount;
 
