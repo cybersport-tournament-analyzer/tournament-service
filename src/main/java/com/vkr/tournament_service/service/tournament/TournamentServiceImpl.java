@@ -79,7 +79,7 @@ public class TournamentServiceImpl implements TournamentService {
         for (TournamentStage stage : stages) {
             Stage stageType = stage.getStageType();
             if (stageType.equals(Stage.SINGLE_ELIMINATION) || stageType.equals(Stage.DOUBLE_ELIMINATION)) {
-                if (stage.getStageOrder() != tournament.getStages().size()) {
+                if (stage.getStageOrder() != tournament.getStages().size() - 1) {
                     throw new WrongTournamentStatusException("Stage of type " + stageType + " must be the last in the tournament.");
                 }
             }
