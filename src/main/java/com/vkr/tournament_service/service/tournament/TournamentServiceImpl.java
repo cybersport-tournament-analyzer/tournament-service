@@ -181,7 +181,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public void startNextStage(Tournament tournament, List<TournamentTeam> teams) {
         int currentTournamentStage = tournament.getCurrentStageOrder();
-        if (tournament.getStages().size() == currentTournamentStage){
+        if (tournament.getStages().size() - 1 == currentTournamentStage){
             tournament.setTournamentStatus(TournamentStatus.COMPLETED);
         }
         else{
