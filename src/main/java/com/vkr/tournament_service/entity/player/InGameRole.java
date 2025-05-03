@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum InGameRole {
     LURKER("Lurker"),
-    ENTRY_FRAGGER("Entry Fragger"),
     SUPPORT("Support"),
     IGL("In Game Leader"),
     RIFFLER("Riffler"),
@@ -16,11 +15,13 @@ public enum InGameRole {
     private final String roleName;
 
     @Override
-    public String toString() { return roleName; }
+    public String toString() {
+        return roleName;
+    }
 
     public static InGameRole fromString(String roleName) {
-        for(InGameRole role: InGameRole.values()) {
-            if(role.roleName.equals(roleName)) {
+        for (InGameRole role : InGameRole.values()) {
+            if (role.roleName.equals(roleName)) {
                 return role;
             }
         }

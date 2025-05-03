@@ -16,5 +16,5 @@ import java.util.List;
 @Jacksonized
 public class PlayerCreateDto {
     private String playerSteamId;
-    private List<InGameRole> inGameRoles;
+    private InGameRole inGameRole;
 }

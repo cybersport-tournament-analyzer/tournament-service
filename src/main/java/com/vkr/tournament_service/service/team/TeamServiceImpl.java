@@ -18,8 +18,6 @@ import com.vkr.tournament_service.validator.team.TeamValidator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -70,8 +68,7 @@ public class TeamServiceImpl implements TeamService {
             }
             players.add(creatorPlayer);
         } else {
-            PlayerCreateDto dto = new PlayerCreateDto(teamCreateDto.getCreatorSteamId(),
-                    new ArrayList<>());
+            PlayerCreateDto dto = new PlayerCreateDto(teamCreateDto.getCreatorSteamId(), null);
             Player createdPlayer = playerService.createPlayer(dto);
             players.add(createdPlayer);
         }
@@ -89,10 +86,15 @@ public class TeamServiceImpl implements TeamService {
                 }
                 players.add(currentPlayer);
             } else {
-                PlayerCreateDto dto = new PlayerCreateDto(id, new ArrayList<>());
+                PlayerCreateDto dto = new PlayerCreateDto(id, null);
                 Player createdPlayer = playerService.createPlayer(dto);
                 players.add(createdPlayer);
             }
+        }
+
+        if (players.size() < currentTournament.getTeamPlayersNumber() - currentTournament.getSubstitutionsNumber()) {
+            throw new TeamIsFullException("Minimum team size is: " +
+                    (currentTournament.getTeamPlayersNumber() - currentTournament.getSubstitutionsNumber()));
         }
 
         team.setPlayers(players);
