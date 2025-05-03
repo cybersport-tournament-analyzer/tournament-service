@@ -1,5 +1,6 @@
 package com.vkr.tournament_service.service.tournament;
 
+import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
@@ -32,6 +33,8 @@ public interface TournamentService {
     void setTeamsSeeds(Tournament tournament);
 
     Tournament getTournament(String tournamentName);
+
+    List<TeamStandingsDto> getOverallStandings(String tournamentId);
 
     void startFirstStage(Tournament tournament);
 

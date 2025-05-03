@@ -1,5 +1,6 @@
 package com.vkr.tournament_service.service.tournament;
 
+import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
@@ -20,10 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -169,6 +167,44 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    public List<TeamStandingsDto> getOverallStandings(String tournamentId) {
+        Tournament tournament = tournamentRepository.findById(UUID.fromString(tournamentId)).orElseThrow(
+                () -> new EntityNotFoundException("Tournament with id=" + tournamentId + " not found")
+        );
+        List<TournamentStage> stages = tournament.getStages();
+        Map<UUID, TeamStandingsDto> teamStandingsMap = new HashMap<>();
+
+        for (TournamentStage stage : stages) {
+            List<TeamStandingsDto> stageStandings = tournamentStageManager
+                    .getCurrentStandings(stage.getId());
+
+            for (TeamStandingsDto standing : stageStandings) {
+                UUID teamId = standing.getTeamDto().getId();
+
+                // Обновляем, если стадия важнее (например, финальная) или место выше
+                if (!teamStandingsMap.containsKey(teamId)) {
+                    teamStandingsMap.put(teamId, standing);
+                } else {
+                    TeamStandingsDto existing = teamStandingsMap.get(teamId);
+                    // Меньшее место = выше в рейтинге
+                    if (standing.getPlace() < existing.getPlace()) {
+                        teamStandingsMap.put(teamId, standing);
+                    }
+                }
+            }
+        }
+
+        // Финальная сортировка: по занятым местам, победам, разнице раундов и т.д.
+        return teamStandingsMap.values().stream()
+                .sorted(Comparator
+                        .comparingInt(TeamStandingsDto::getPlace)
+                        .thenComparing(TeamStandingsDto::getPoints, Comparator.reverseOrder())
+                        .thenComparing(TeamStandingsDto::getRoundDifference, Comparator.reverseOrder())
+                        .thenComparing(t -> t.getTeamDto().getSeed()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void startFirstStage(Tournament tournament) {
         TournamentStage stage = tournament.getStages().get(0);
         List<TournamentTeam> teams = tournament.getTeams();
@@ -181,10 +217,9 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public void startNextStage(Tournament tournament, List<TournamentTeam> teams) {
         int currentTournamentStage = tournament.getCurrentStageOrder();
-        if (tournament.getStages().size() == currentTournamentStage){
+        if (tournament.getStages().size() == currentTournamentStage) {
             tournament.setTournamentStatus(TournamentStatus.COMPLETED);
-        }
-        else{
+        } else {
             TournamentStage stage = tournament.getStages().get(currentTournamentStage + 1);
             tournamentStageManager.createStage(stage, teams);
             tournament.setCurrentStageOrder(stage.getStageOrder());
