@@ -22,7 +22,7 @@ public class TournamentStatusScheduler {
 
     private final TournamentService tournamentService;
 
-    @Scheduled(fixedRate = 60000) // Запуск каждые 60 секунд
+    @Scheduled(fixedRate = 10000) // Запуск каждые 10 секунд
     public void updateTournamentStatuses() {
         OffsetDateTime now = OffsetDateTime.now();
         List<Tournament> tournaments = tournamentRepository.findAll();
