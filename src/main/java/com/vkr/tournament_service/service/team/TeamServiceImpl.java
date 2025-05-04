@@ -3,8 +3,10 @@ package com.vkr.tournament_service.service.team;
 import com.vkr.tournament_service.client.user.UserClient;
 import com.vkr.tournament_service.dto.player.PlayerCreateDto;
 import com.vkr.tournament_service.dto.team.TeamCreateDto;
+import com.vkr.tournament_service.dto.team.TeamCreatePlayersDto;
 import com.vkr.tournament_service.dto.team.TeamDto;
 import com.vkr.tournament_service.dto.user.GetAverageRatingByIdsDto;
+import com.vkr.tournament_service.entity.player.InGameRole;
 import com.vkr.tournament_service.entity.player.Player;
 import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
@@ -58,38 +60,27 @@ public class TeamServiceImpl implements TeamService {
         TournamentTeam team = teamMapper.toEntity(teamCreateDto, tournamentId);
         team.setTournament(currentTournament);
 
-        Player creatorPlayer = playerService.getPlayer(teamCreateDto.getCreatorSteamId());
         List<Player> players = new ArrayList<>();
-
-        if (creatorPlayer != null) {
-            if (isAlreadyInAnotherTeam(currentTournament, creatorPlayer)) {
-                throw new AlreadyInOtherTeamException("Player with id " + creatorPlayer.getPlayerSteamId() +
-                        " is already in another team");
-            }
-            players.add(creatorPlayer);
-        } else {
-            PlayerCreateDto dto = new PlayerCreateDto(teamCreateDto.getCreatorSteamId(), null);
-            Player createdPlayer = playerService.createPlayer(dto);
-            players.add(createdPlayer);
+        PlayerCreateDto dto = new PlayerCreateDto(teamCreateDto.getCreatorSteamId(), InGameRole.fromString(teamCreateDto.getInGameRole()));
+        Player createdTeamCreatorPlayer = playerService.createPlayer(dto);
+        if (isAlreadyInAnotherTeam(currentTournament, createdTeamCreatorPlayer)) {
+            throw new AlreadyInOtherTeamException("Player with id " + createdTeamCreatorPlayer.getPlayerSteamId() +
+                    " is already in another team");
         }
+        players.add(createdTeamCreatorPlayer);
 
-        for (String id : teamCreateDto.getSteamIds()) {
+        for (TeamCreatePlayersDto teamCreatePlayersDto : teamCreateDto.getPlayers()) {
             if (players.size() == currentTournament.getTeamPlayersNumber()) {
                 throw new TeamIsFullException("Maximum team size is: " +
                         currentTournament.getTeamPlayersNumber());
             }
-            Player currentPlayer = playerService.getPlayer(id);
-            if (currentPlayer != null) {
-                if (isAlreadyInAnotherTeam(currentTournament, creatorPlayer) || players.contains(currentPlayer)) {
-                    throw new AlreadyInOtherTeamException("Player with id " + currentPlayer.getPlayerSteamId() +
-                            " is already in another team");
-                }
-                players.add(currentPlayer);
-            } else {
-                PlayerCreateDto dto = new PlayerCreateDto(id, null);
-                Player createdPlayer = playerService.createPlayer(dto);
-                players.add(createdPlayer);
+            PlayerCreateDto playerDto = new PlayerCreateDto(teamCreatePlayersDto.getSteamId(), InGameRole.fromString(teamCreatePlayersDto.getInGameRole()));
+            Player createdPlayer = playerService.createPlayer(playerDto);
+            if (isAlreadyInAnotherTeam(currentTournament, createdPlayer) || players.contains(createdPlayer)) {
+                throw new AlreadyInOtherTeamException("Player with id " + createdPlayer.getPlayerSteamId() +
+                        " is already in another team");
             }
+            players.add(createdPlayer);
         }
 
         if (players.size() < currentTournament.getTeamPlayersNumber() - currentTournament.getSubstitutionsNumber()) {
