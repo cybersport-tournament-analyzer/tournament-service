@@ -6,17 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 
-import java.util.List;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Jacksonized
-public class TeamCreateDto {
-    private String teamName;
-    private String flag;
-    private String creatorSteamId;
+public class TeamCreatePlayersDto {
+    private String steamId;
     private String inGameRole;
-    private List<TeamCreatePlayersDto> players;
 }

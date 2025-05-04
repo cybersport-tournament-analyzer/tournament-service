@@ -1,5 +1,6 @@
 package com.vkr.tournament_service.entity.player;
 
+import com.vkr.tournament_service.exception.EntityNotFoundException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +26,6 @@ public enum InGameRole {
                 return role;
             }
         }
-        throw new IllegalArgumentException("No such status: " + roleName);
+        throw new EntityNotFoundException("No such status: " + roleName);
     }
 }
