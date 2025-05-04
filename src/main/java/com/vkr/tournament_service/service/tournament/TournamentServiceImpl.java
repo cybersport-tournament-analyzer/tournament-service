@@ -171,7 +171,8 @@ public class TournamentServiceImpl implements TournamentService {
         Tournament tournament = tournamentRepository.findById(UUID.fromString(tournamentId)).orElseThrow(
                 () -> new EntityNotFoundException("Tournament with id=" + tournamentId + " not found")
         );
-        List<TournamentStage> stages = tournament.getStages();
+        List<TournamentStage> stages = new ArrayList<>(tournament.getStages());
+        stages.sort(Comparator.comparingInt(TournamentStage::getStageOrder));
         Map<UUID, TeamStandingsDto> teamStandingsMap = new HashMap<>();
 
         for (TournamentStage stage : stages) {
@@ -180,17 +181,7 @@ public class TournamentServiceImpl implements TournamentService {
 
             for (TeamStandingsDto standing : stageStandings) {
                 UUID teamId = standing.getTeamDto().getId();
-
-                // Обновляем, если стадия важнее (например, финальная) или место выше
-                if (!teamStandingsMap.containsKey(teamId)) {
-                    teamStandingsMap.put(teamId, standing);
-                } else {
-                    TeamStandingsDto existing = teamStandingsMap.get(teamId);
-                    // Меньшее место = выше в рейтинге
-                    if (standing.getPlace() < existing.getPlace()) {
-                        teamStandingsMap.put(teamId, standing);
-                    }
-                }
+                teamStandingsMap.put(teamId, standing);
             }
         }
 
