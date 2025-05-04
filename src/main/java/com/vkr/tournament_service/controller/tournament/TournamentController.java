@@ -1,5 +1,6 @@
 package com.vkr.tournament_service.controller.tournament;
 
+import com.vkr.tournament_service.dto.team.TeamStandingsDto;
 import com.vkr.tournament_service.dto.tournament.TournamentCreateDto;
 import com.vkr.tournament_service.dto.tournament.TournamentDto;
 import com.vkr.tournament_service.dto.tournament.TournamentUpdateDto;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -77,5 +79,12 @@ public class TournamentController {
     @Operation(summary = "Delete tournament")
     public void deleteTournament(@PathVariable String tournamentId, @RequestParam String userId) {
         tournamentService.deleteTournament(tournamentId, userId);
+    }
+
+    @GetMapping("/{tournamentId}/standings")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get tournaments standings by id")
+    public List<TeamStandingsDto> getTournamentStandingsById(@PathVariable String tournamentId) {
+        return tournamentService.getOverallStandings(tournamentId);
     }
 }

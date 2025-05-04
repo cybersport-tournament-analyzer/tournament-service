@@ -24,14 +24,9 @@ public class Player {
     @Column(name = "player_steam_id", nullable = false)
     private String playerSteamId;
 
-    @ElementCollection
     @Enumerated(EnumType.STRING)
-    @CollectionTable(
-            name = "player_in_game_roles",
-            joinColumns = @JoinColumn(name = "player_id")
-    )
-    @Column(name = "role")
-    private List<InGameRole> inGameRoles;
+    @Column(name = "in_game_role")
+    private InGameRole inGameRole;
 
     @ManyToMany(mappedBy = "players")
     private List<TournamentTeam> teams;

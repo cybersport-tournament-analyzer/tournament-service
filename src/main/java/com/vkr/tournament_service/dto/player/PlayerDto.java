@@ -19,5 +19,5 @@ import java.util.UUID;
 public class PlayerDto {
     private UUID id;
     private String playerSteamId;
-    private List<InGameRole> inGameRoles;
+    private InGameRole inGameRole;
 }
