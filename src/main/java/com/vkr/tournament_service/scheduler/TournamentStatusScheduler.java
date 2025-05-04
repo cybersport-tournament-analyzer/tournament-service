@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -22,6 +23,7 @@ public class TournamentStatusScheduler {
 
     private final TournamentService tournamentService;
 
+    @Transactional
     @Scheduled(fixedRate = 60000) // Запуск каждые 60 секунд
     public void updateTournamentStatuses() {
         OffsetDateTime now = OffsetDateTime.now();
@@ -37,6 +39,10 @@ public class TournamentStatusScheduler {
 
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION) {
                 if (now.isAfter(tournament.getRegistrationEndTime())) {
+                    if(tournament.getTeams().isEmpty() || tournament.getTeams().size() != tournament.getTeamsCount()) {
+                        tournaments.remove(tournament);
+                        tournamentService.deleteTournament(String.valueOf(tournament.getId()), tournament.getCreatorId());
+                    }
                     tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
                     log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
                     tournamentService.setTeamsSeeds(tournament);
