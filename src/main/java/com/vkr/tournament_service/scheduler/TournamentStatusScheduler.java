@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.Mapping;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -37,10 +38,15 @@ public class TournamentStatusScheduler {
 
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION) {
                 if (now.isAfter(tournament.getRegistrationEndTime())) {
-                    tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
-                    log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
-                    tournamentService.setTeamsSeeds(tournament);
-                    tournamentService.startFirstStage(tournament);
+                    if(tournament.getTeams().isEmpty() || tournament.getTeams().size() != tournament.getTeamsCount()) {tournamentService.deleteTournament(
+                            String.valueOf(tournament.getId()), tournament.getCreatorId() //защита от долбаебов
+                    );
+                    } else {
+                        tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
+                        log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
+                        tournamentService.setTeamsSeeds(tournament);
+                        tournamentService.startFirstStage(tournament);
+                    }
                 }
             }
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION_ENDED) {
