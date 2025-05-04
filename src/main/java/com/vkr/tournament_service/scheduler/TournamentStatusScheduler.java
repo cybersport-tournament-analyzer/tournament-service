@@ -42,11 +42,12 @@ public class TournamentStatusScheduler {
                     if(tournament.getTeams().isEmpty() || tournament.getTeams().size() != tournament.getTeamsCount()) {
                         tournaments.remove(tournament);
                         tournamentService.deleteTournament(String.valueOf(tournament.getId()), tournament.getCreatorId());
+                    } else {
+                        tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
+                        log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
+                        tournamentService.setTeamsSeeds(tournament);
+                        tournamentService.startFirstStage(tournament);
                     }
-                    tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
-                    log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
-                    tournamentService.setTeamsSeeds(tournament);
-                    tournamentService.startFirstStage(tournament);
                 }
             }
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION_ENDED) {
