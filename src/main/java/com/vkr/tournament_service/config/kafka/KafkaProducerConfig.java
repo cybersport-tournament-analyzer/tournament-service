@@ -31,7 +31,8 @@ public class KafkaProducerConfig {
         props.put(JsonSerializer.TYPE_MAPPINGS,
                 """
                 match-end:com.vkr.tournament_service.kafka.event.matchEnd.MatchEndEvent,
-                lobby-start:com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent
+                lobby-start:com.vkr.tournament_service.kafka.event.lobbyStart.LobbyStartEvent,
+                tournament-start:com.vkr.tournament_service.kafka.event.tournamentStart.TournamentStartEvent
                 """);
 
         return new DefaultKafkaProducerFactory<>(props);

@@ -1,19 +1,26 @@
 package com.vkr.tournament_service.scheduler;
 
 
+import com.vkr.tournament_service.dto.team.TeamDto;
+import com.vkr.tournament_service.entity.player.Player;
+import com.vkr.tournament_service.entity.team.TournamentTeam;
 import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
+import com.vkr.tournament_service.kafka.event.tournamentStart.TournamentStartEvent;
+import com.vkr.tournament_service.kafka.producer.tournamentStart.TournamentStartProducer;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.service.tournament.TournamentService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -21,7 +28,7 @@ import java.util.List;
 public class TournamentStatusScheduler {
 
     private final TournamentRepository tournamentRepository;
-
+    private final TournamentStartProducer tournamentStartProducer;
     private final TournamentService tournamentService;
 
     @Transactional
@@ -60,13 +67,22 @@ public class TournamentStatusScheduler {
 
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION_ENDED) {
                 if (now.isAfter(tournament.getTournamentStartTime())) {
+
                     tournament.setTournamentStatus(TournamentStatus.ACTIVE);
+
+                    List<String> playerIds = tournament.getTeams().stream()
+                            .flatMap(team -> team.getPlayers().stream())
+                            .map(Player::getPlayerSteamId)
+                            .toList();
+
+                    tournamentStartProducer.produce(new TournamentStartEvent(tournament.getId(), playerIds));
+
                     log.info("Tournament {} status updated to ACTIVE", tournament.getTournamentName());
                 }
             }
         }
 
-        tournamentRepository.saveAll(tournaments); // Тут уже без удалённых объектов
+        tournamentRepository.saveAll(tournaments);
     }
 
 }
