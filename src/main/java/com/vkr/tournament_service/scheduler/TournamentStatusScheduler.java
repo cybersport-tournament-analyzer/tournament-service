@@ -5,13 +5,14 @@ import com.vkr.tournament_service.entity.tournament.Tournament;
 import com.vkr.tournament_service.entity.tournament.TournamentStatus;
 import com.vkr.tournament_service.repository.tournament.TournamentRepository;
 import com.vkr.tournament_service.service.tournament.TournamentService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.Mapping;
 
 import java.time.OffsetDateTime;
+import java.util.Iterator;
 import java.util.List;
 
 @Component
@@ -23,12 +24,16 @@ public class TournamentStatusScheduler {
 
     private final TournamentService tournamentService;
 
-    @Scheduled(fixedRate = 10000) // Запуск каждые 10 секунд
+    @Transactional
+    @Scheduled(fixedRate = 10000)
     public void updateTournamentStatuses() {
         OffsetDateTime now = OffsetDateTime.now();
         List<Tournament> tournaments = tournamentRepository.findAll();
+        Iterator<Tournament> iterator = tournaments.iterator();
 
-        for (Tournament tournament : tournaments) {
+        while (iterator.hasNext()) {
+            Tournament tournament = iterator.next();
+
             if (tournament.getTournamentStatus() == TournamentStatus.NOT_STARTED) {
                 if (now.isAfter(tournament.getRegistrationStartTime())) {
                     tournament.setTournamentStatus(TournamentStatus.REGISTRATION);
@@ -38,9 +43,12 @@ public class TournamentStatusScheduler {
 
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION) {
                 if (now.isAfter(tournament.getRegistrationEndTime())) {
-                    if(tournament.getTeams().isEmpty() || tournament.getTeams().size() != tournament.getTeamsCount()) {tournamentService.deleteTournament(
-                            String.valueOf(tournament.getId()), tournament.getCreatorId() //защита от долбаебов
-                    );
+                    if (tournament.getTeams().size() != tournament.getTeamsCount()) {
+                        tournamentService.deleteTournament(
+                                String.valueOf(tournament.getId()), tournament.getCreatorId()
+                        );
+                        iterator.remove(); // Удаляем из списка, чтобы не сохранить потом
+                        continue;
                     } else {
                         tournament.setTournamentStatus(TournamentStatus.REGISTRATION_ENDED);
                         log.info("Tournament {} status updated to REGISTRATION_ENDED", tournament.getTournamentName());
@@ -49,6 +57,7 @@ public class TournamentStatusScheduler {
                     }
                 }
             }
+
             if (tournament.getTournamentStatus() == TournamentStatus.REGISTRATION_ENDED) {
                 if (now.isAfter(tournament.getTournamentStartTime())) {
                     tournament.setTournamentStatus(TournamentStatus.ACTIVE);
@@ -57,7 +66,8 @@ public class TournamentStatusScheduler {
             }
         }
 
-        tournamentRepository.saveAll(tournaments);
+        tournamentRepository.saveAll(tournaments); // Тут уже без удалённых объектов
     }
+
 }
 
