@@ -2,6 +2,7 @@ package com.vkr.tournament_service.controller.player;
 
 import com.vkr.tournament_service.dto.player.PlayerCreateDto;
 import com.vkr.tournament_service.dto.player.PlayerDto;
+import com.vkr.tournament_service.dto.player.PlayerRequestDto;
 import com.vkr.tournament_service.dto.player.PlayerUpdateDto;
 import com.vkr.tournament_service.mapper.player.PlayerMapper;
 import com.vkr.tournament_service.service.player.PlayerService;
@@ -16,9 +17,9 @@ public class PlayerController {
     private final PlayerService playerService;
     private final PlayerMapper playerMapper;
 
-    @GetMapping("/{playerUsername}")
-    public PlayerDto getPlayer(@PathVariable String playerUsername) {
-        return playerMapper.toDto(playerService.getPlayer(playerUsername));
+    @GetMapping
+    public PlayerDto getPlayer(@RequestBody PlayerRequestDto playerRequestDto) {
+        return playerMapper.toDto(playerService.getPlayer(playerRequestDto));
     }
 
     @PostMapping

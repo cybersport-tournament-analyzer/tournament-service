@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PlayerUpdateDto {
-    private String inGameRole;
+public class PlayerRequestDto {
     private String steamId;
     private String teamId;
 }

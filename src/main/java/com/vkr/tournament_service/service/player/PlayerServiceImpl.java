@@ -1,6 +1,7 @@
 package com.vkr.tournament_service.service.player;
 
 import com.vkr.tournament_service.dto.player.PlayerCreateDto;
+import com.vkr.tournament_service.dto.player.PlayerRequestDto;
 import com.vkr.tournament_service.dto.player.PlayerUpdateDto;
 import com.vkr.tournament_service.entity.player.InGameRole;
 import com.vkr.tournament_service.entity.player.Player;
@@ -12,6 +13,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,18 +32,20 @@ public class PlayerServiceImpl implements PlayerService {
     }
 
     @Override
-    public Player getPlayer(String playerSteamId) {
-        return playerRepository.findByPlayerSteamId(playerSteamId);
+    public Player getPlayer(PlayerRequestDto playerRequestDto) {
+        return playerRepository.findBySteamIdAndTeamId(playerRequestDto.getSteamId(), UUID.fromString(playerRequestDto.getTeamId())).orElseThrow(() ->
+                new EntityNotFoundException("Player with id: " + playerRequestDto.getSteamId()
+                        + " and teamId: " + playerRequestDto.getTeamId() + " not found."));
     }
 
     @Override
     @Transactional
     public Player updatePlayerRole(String userId, PlayerUpdateDto playerUpdateDto) {
-        playerValidator.validateAccess(playerUpdateDto.getSteamId(), userId);
-        Player player = playerRepository.findByPlayerSteamId(playerUpdateDto.getSteamId());
-        if (player == null) {
-            throw new EntityNotFoundException("Player with Steam ID " + playerUpdateDto.getSteamId() + " not found");
-        }
+        playerValidator.validateAccess(playerUpdateDto.getSteamId(), userId, playerUpdateDto.getTeamId());
+        Player player = playerRepository.findBySteamIdAndTeamId(playerUpdateDto.getSteamId()
+                , UUID.fromString(playerUpdateDto.getTeamId())).orElseThrow(() ->
+                new EntityNotFoundException("Player with id: " + playerUpdateDto.getSteamId()
+                        + " and teamId: " + playerUpdateDto.getTeamId() + " not found."));
 
         player.setInGameRole(InGameRole.fromString(playerUpdateDto.getInGameRole()));
         return playerRepository.save(player);
