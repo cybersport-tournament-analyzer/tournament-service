@@ -9,6 +9,7 @@ import org.hibernate.annotations.UuidGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tournament_teams")
@@ -53,4 +54,13 @@ public class TournamentTeam {
             inverseJoinColumns = @JoinColumn(name = "player_id")
     )
     private List<Player> players = new ArrayList<>();
+
+    public List<Player> getMainRoster() {
+        return players.stream().limit(tournament.getTeamPlayersNumber() - tournament.getSubstitutionsNumber()).collect(Collectors.toList());
+    }
+
+    public List<Player> getSubstitutes() {
+        return players.stream().skip(tournament.getTeamPlayersNumber() - tournament.getSubstitutionsNumber()).collect(Collectors.toList());
+    }
+
 }

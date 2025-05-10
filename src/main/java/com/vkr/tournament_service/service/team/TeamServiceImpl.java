@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -124,6 +125,43 @@ public class TeamServiceImpl implements TeamService {
         TournamentTeam team = teamRepository.findById(teamId).orElseThrow();
         teamValidator.validateAccess(teamId, userId);
         teamRepository.delete(team);
+    }
+
+    @Override
+    @Transactional
+    public TeamDto updateMainRoster(UUID teamId, List<String> newMainRosterPlayerIds, String userId) {
+        teamValidator.validateAccess(teamId, userId);
+        TournamentTeam team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new EntityNotFoundException("Team not found with id=" + teamId));
+        if (newMainRosterPlayerIds.size() != team.getTournament().getTeamPlayersNumber() - team.getTournament().getSubstitutionsNumber()) {
+            throw new IllegalArgumentException("Main roster must contain exactly "
+                    + (team.getTournament().getTeamPlayersNumber()
+                    - team.getTournament().getSubstitutionsNumber()) + " players");
+        }
+        List<Player> allPlayers = team.getPlayers();
+
+        Set<String> allPlayerIds = allPlayers.stream().map(Player::getPlayerSteamId).collect(Collectors.toSet());
+        if (!allPlayerIds.containsAll(newMainRosterPlayerIds)) {
+            throw new IllegalArgumentException("Some players are not part of the team");
+        }
+
+        List<Player> newPlayersOrder = new ArrayList<>();
+
+        // Добавляем основной состав в указанном порядке
+        for (String playerId : newMainRosterPlayerIds) {
+            allPlayers.stream()
+                    .filter(p -> p.getPlayerSteamId().equals(playerId))
+                    .findFirst()
+                    .ifPresent(newPlayersOrder::add);
+        }
+
+        // Добавляем оставшихся (замен)
+        allPlayers.stream()
+                .filter(p -> !newMainRosterPlayerIds.contains(p.getPlayerSteamId()))
+                .forEach(newPlayersOrder::add);
+
+        team.setPlayers(newPlayersOrder);
+        return teamMapper.toDto(teamRepository.save(team));
     }
 
     private boolean isAlreadyInAnotherTeam(Tournament currentTournament, Player currentPlayer) {
