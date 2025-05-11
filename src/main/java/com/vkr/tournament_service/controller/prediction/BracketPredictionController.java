@@ -1,15 +1,17 @@
 package com.vkr.tournament_service.controller.prediction;
 
-import com.vkr.tournament_service.dto.prediction.BracketPredictionRequest;
-import com.vkr.tournament_service.entity.prediction.BracketPrediction;
-import com.vkr.tournament_service.entity.prediction.PredictedMatch;
+import com.vkr.tournament_service.dto.prediction.BracketPredictionDto;
+import com.vkr.tournament_service.dto.prediction.BracketPredictionRequestDto;
+import com.vkr.tournament_service.mapper.prediction.BracketPredictionMapper;
 import com.vkr.tournament_service.service.prediction.BracketPredictionService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/predictions")
@@ -17,38 +19,31 @@ import java.util.UUID;
 public class BracketPredictionController {
 
     private final BracketPredictionService predictionService;
+    private final BracketPredictionMapper bracketPredictionMapper;
 
     @PostMapping
-    public ResponseEntity<BracketPrediction> submitPrediction(@RequestBody BracketPredictionRequest request) {
-
-        List<PredictedMatch> matches = request.getPredictedMatches().stream()
-                .map(dto -> {
-                    PredictedMatch match = new PredictedMatch();
-                    match.setMatchId(dto.getMatchId());
-                    match.setPredictedWinnerName(dto.getPredictedWinnerName());
-                    return match;
-                })
-                .toList();
-
-        BracketPrediction prediction = predictionService.submitPrediction(
-                request.getUserId(),
-                request.getStageId(),
-                request.getTournamentId(),
-                matches
-        );
-        return ResponseEntity.ok(prediction);
-    }
-
-    @GetMapping("/{stageId}/user/{userId}")
-    public ResponseEntity<BracketPrediction> getUserPrediction(@PathVariable UUID stageId, @PathVariable String userId) {
-        return predictionService.getPrediction(userId, stageId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create prediction")
+    public BracketPredictionDto createPrediction(@RequestBody BracketPredictionRequestDto predictionRequestDto) {
+        return bracketPredictionMapper
+                .toDto(predictionService.createPrediction(predictionRequestDto.getUserId(),
+                        UUID.fromString(predictionRequestDto.getStageId()), predictionRequestDto.getBracket(),
+                        predictionRequestDto.getStageWinner(), predictionRequestDto.getStageThirdPlace()));
     }
 
     @GetMapping("/{stageId}")
-    public ResponseEntity<List<BracketPrediction>> getAllPredictions(@PathVariable UUID stageId) {
-        return ResponseEntity.ok(predictionService.getAllPredictions(stageId));
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get predictions by stageId")
+    public List<BracketPredictionDto> getAllPredictionsByStage(@PathVariable String stageId) {
+        return predictionService.getAllPredictionsByStage(UUID.fromString(stageId)).stream()
+                .map(bracketPredictionMapper::toDto).collect(Collectors.toList());
+    }
+
+    @DeleteMapping("/{predictionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete prediction")
+    public void deletePrediction(@PathVariable String predictionId, @RequestParam String userId) {
+        predictionService.deletePrediction(userId, UUID.fromString(predictionId));
     }
 }
 

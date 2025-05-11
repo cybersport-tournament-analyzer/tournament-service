@@ -10,7 +10,12 @@ import java.util.UUID;
 
 @Repository
 public interface BracketPredictionRepository extends JpaRepository<BracketPrediction, Long> {
+
     Optional<BracketPrediction> findByUserIdAndStageId(String userId, UUID stageId);
+
+    Optional<BracketPrediction> findById(UUID uuid);
+
+    void deleteByUserIdAndStageId(String userId, UUID stageId);
 
     List<BracketPrediction> findAllByStageId(UUID stageId);
 }

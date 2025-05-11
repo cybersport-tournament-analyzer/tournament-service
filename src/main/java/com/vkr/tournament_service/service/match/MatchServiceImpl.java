@@ -14,6 +14,7 @@ import com.vkr.tournament_service.kafka.producer.lobbyStart.LobbyStartProducer;
 import com.vkr.tournament_service.mapper.match.MatchMapper;
 import com.vkr.tournament_service.mapper.team.TeamMapper;
 import com.vkr.tournament_service.repository.match.MatchRepository;
+import com.vkr.tournament_service.service.prediction.BracketPredictionService;
 import com.vkr.tournament_service.service.tournament.TournamentService;
 import com.vkr.tournament_service.service.tournamentStage.TournamentStageManager;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class MatchServiceImpl implements MatchService {
     private final TeamMapper teamMapper;
     private final TournamentStageManager tournamentStageManager;
     private final TournamentService tournamentService;
+    private final BracketPredictionService bracketPredictionService;
 
     @Override
     public void updateMatchResults(TournamentMatch match, MatchEndEvent event) {
@@ -60,6 +62,7 @@ public class MatchServiceImpl implements MatchService {
             tournamentStageManager.advanceTeam(match);
             matchRepository.save(match);
             if (tournamentStageManager.isStageFinished(match.getStage().getId())) {
+                bracketPredictionService.updateScores(tournamentStageManager.getBracket(match.getStage().getId()), match.getStage());
                 tournamentService.startNextStage(match.getTournament(),
                         tournamentStageManager.getTeamsToNextStage(match.getStage().getId()));
             }
