@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vkr.tournament_service.entity.prediction.BracketPrediction;
+import com.vkr.tournament_service.entity.schedule.ScheduleStatus;
 import com.vkr.tournament_service.entity.tournamentStage.TournamentStage;
 import com.vkr.tournament_service.exception.EntityNotFoundException;
 import com.vkr.tournament_service.exception.ValidationException;
@@ -27,6 +28,11 @@ public class BracketPredictionService {
 
         TournamentStage stage = stageRepository.findById(stageId).orElseThrow(()
                 -> new EntityNotFoundException("Stage with id: " + stageId + " not found."));
+
+        boolean anyFinished = stage.getMatches().stream().anyMatch(m -> m.getSchedule().getStatus() == ScheduleStatus.COMPLETED);
+        if (anyFinished) {
+            throw new ValidationException("Cannot submit prediction after matches in this stage have already started.");
+        }
 
         Optional<BracketPrediction> existingPrediction = predictionRepository.findByUserIdAndStageId(userId, stageId);
         if (existingPrediction.isPresent()) {
@@ -54,7 +60,7 @@ public class BracketPredictionService {
 
     @Transactional
     public List<BracketPrediction> getAllPredictionsByStage(UUID stageId) {
-        return predictionRepository.findAllByStageId(stageId);
+        return predictionRepository.findAllByStageIdOrderByScoreDesc(stageId);
     }
 
     public void deletePrediction(String userId, UUID predictionId) {

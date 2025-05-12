@@ -15,6 +15,8 @@ public interface BracketPredictionRepository extends JpaRepository<BracketPredic
 
     Optional<BracketPrediction> findById(UUID uuid);
 
+    List<BracketPrediction> findAllByStageIdOrderByScoreDesc(UUID stageId);
+
     void deleteByUserIdAndStageId(String userId, UUID stageId);
 
     List<BracketPrediction> findAllByStageId(UUID stageId);
