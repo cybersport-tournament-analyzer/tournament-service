@@ -135,7 +135,7 @@ public class BracketPredictionService {
                     objectMapper.readValue(prediction.getPredictedBracketJson(), new TypeReference<>() {
                     });
 
-            for (int round = 0; round < Math.min(predictedBracket.size(), actualBracket.size()); round++) {
+            for (int round = 1; round < Math.min(predictedBracket.size(), actualBracket.size()); round++) {
                 List<List<Map<String, Object>>> predictedMatches = predictedBracket.get(round);
                 List<List<Map<String, Object>>> actualMatches = actualBracket.get(round);
 
